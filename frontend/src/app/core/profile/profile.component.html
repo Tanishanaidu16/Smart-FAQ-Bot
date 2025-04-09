@@ -1,0 +1,28 @@
+<div class="profile-container">
+  <h1>Profile</h1>
+
+  <div *ngIf="!isEditing; else editSection">
+    <p><strong>Username:</strong> {{ profile.username }}</p>
+    <p><strong>Email:</strong> {{ profile.email }}</p>
+    <button class="profile-button" (click)="enableEditMode()">Edit Profile</button>
+  </div>
+
+  <ng-template #editSection>
+    <h2>Edit Profile</h2>
+    <div *ngIf="updateError" class="error-message">{{ updateError }}</div>
+    <div *ngIf="updateSuccess" class="success-message">{{ updateSuccess }}</div>
+    <form (ngSubmit)="saveProfile()">
+      <div>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" [(ngModel)]="editProfile.username" required>
+      </div>
+      <div>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" [(ngModel)]="editProfile.email" required>
+      </div>
+      <button class="profile-button" type="submit">Save Changes</button>
+      <button class="profile-button" type="button" (click)="disableEditMode()">Cancel</button>
+    </form>
+  </ng-template>
+
+  </div>

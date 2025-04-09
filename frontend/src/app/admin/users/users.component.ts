@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angula
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { HeaderComponent } from '../../header/header.component';
+// import { HeaderComponent } from '../../header1/header/header.component';
 import { FooterComponent } from '../../footer/footer.component';
 import $ from 'jquery';
 import 'datatables.net';
@@ -17,7 +17,6 @@ import * as bootstrap from 'bootstrap';
     CommonModule,
     FormsModule,
     HttpClientModule,
-    HeaderComponent,
     FooterComponent
   ]
 })

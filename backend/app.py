@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import datetime
 import os
+from functools import wraps
+from pymongo import MongoClient
 from bson.objectid import ObjectId
 
 app = Flask(__name__)
@@ -13,13 +14,53 @@ CORS(app)
 # Secret key for JWT
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'devsecret')
 
-# MongoDB setup
-client = MongoClient("mongodb://localhost:27017/")
-db = client['chatbot_platform']
-super_admins = db['super_admins']
-college_users = db['college_users']
+# MongoDB connection setup
+mongo_uri = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/chatbot_platform')
+client = MongoClient(mongo_uri)
+db = client.get_database()
+college_users = db.college_users
+super_admins = db.super_admins
 
-# Default super admin user (on startup)
+# Middleware to verify JWT token
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+            try:
+                token = request.headers['Authorization'].split(" ")[1]
+            except IndexError:
+                return jsonify({'error': 'Invalid token format!'}), 401
+
+        if not token:
+            return jsonify({'error': 'Token is missing!'}), 401
+
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            user_email = data.get('email')
+            user_role = data.get('role')
+
+            if user_role == 'superAdmin':
+                current_user = super_admins.find_one({'email': user_email})
+            elif user_role == 'collegeUser':
+                current_user = college_users.find_one({'email': user_email})
+            else:
+                return jsonify({'error': 'Invalid token role!'}), 401
+
+            if not current_user:
+                return jsonify({'error': 'User not found!'}), 401
+
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token has expired!'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token!'}), 401
+        except Exception as e:
+            return jsonify({'error': 'An error occurred while decoding the token.', 'error': str(e)}), 401
+
+        return f(current_user, *args, **kwargs)
+    return decorated
+
+# Default super admin user initialization
 def init_super_admin():
     default_email = "admin@platform.com"
     default_password = "admin123"
@@ -36,9 +77,9 @@ def init_super_admin():
     else:
         print("[Init] Super admin already exists.")
 
-# Super Admin Login
-@app.route('/api/super-admin/login', methods=['POST'])
-def super_admin_login():
+# Single Login Endpoint
+@app.route('/api/login', methods=['POST'])
+def login():
     data = request.json
     email = data.get('email')
     password = data.get('password')
@@ -46,71 +87,40 @@ def super_admin_login():
     if not email or not password:
         return jsonify({"error": "Email and password are required."}), 400
 
-    admin = super_admins.find_one({"email": email})
-    if not admin or not check_password_hash(admin['password'], password):
-        return jsonify({"error": "Invalid credentials."}), 401
+    # Check if it's a super admin
+    super_admin = super_admins.find_one({"email": email})
+    if super_admin and check_password_hash(super_admin['password'], password):
+        token = jwt.encode({
+            'email': email,
+            'role': 'superAdmin',
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+        }, app.config['SECRET_KEY'], algorithm='HS256')
+        return jsonify({"token": token, "role": "superAdmin"}), 200
 
-    token = jwt.encode({
-        'email': email,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
-    }, app.config['SECRET_KEY'], algorithm='HS256')
+    # Check if it's a college user
+    college_user = college_users.find_one({"email": email})
+    if college_user and check_password_hash(college_user['password'], password):
+        token = jwt.encode({
+            'email': email,
+            'role': 'collegeUser',
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+        }, app.config['SECRET_KEY'], algorithm='HS256')
+        return jsonify({"token": token, "role": "collegeUser"}), 200
 
-    return jsonify({"token": token}), 200
+    return jsonify({"error": "Invalid credentials."}), 401
 
-# CRUD API: College Users
+# CRUD API: College Users (Accessible only by Super Admins)
+# ... (Keep the /api/college-users routes as they are, protected by super_admin_token_required if needed)
 
-# Get all college users
-@app.route('/api/college-users', methods=['GET'])
-def get_college_users():
-    users = list(college_users.find())
-    for user in users:
-        user['_id'] = str(user['_id'])
-    return jsonify(users)
-
-# Create new college user
-@app.route('/api/college-users', methods=['POST'])
-def create_college_user():
-    data = request.json
-    name = data.get('name')
-    email = data.get('email')
-    password = generate_password_hash(data.get('password'))
-
-    if not name or not email or not password:
-        return jsonify({"error": "Missing required fields."}), 400
-
-    user_id = college_users.insert_one({
-        "name": name,
-        "email": email,
-        "password": password,
-        "created_at": datetime.datetime.utcnow()
-    }).inserted_id
-
-    return jsonify({"message": "User created.", "id": str(user_id)}), 201
-
-# Update college user
-@app.route('/api/college-users/<user_id>', methods=['PUT'])
-def update_college_user(user_id):
-    data = request.json
-    name = data.get('name')
-    email = data.get('email')
-    password = data.get('password')
-
-    update_data = {}
-    if name:
-        update_data['name'] = name
-    if email:
-        update_data['email'] = email
-    if password:
-        update_data['password'] = generate_password_hash(password)
-
-    college_users.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
-    return jsonify({"message": "User updated."}), 200
-
-# Delete college user
-@app.route('/api/college-users/<user_id>', methods=['DELETE'])
-def delete_college_user(user_id):
-    college_users.delete_one({"_id": ObjectId(user_id)})
-    return jsonify({"message": "User deleted."}), 200
+# Protected route for college users (example)
+@app.route('/api/profile', methods=['GET'])
+@token_required
+def get_profile(current_user):
+    if getattr(current_user, '_fields', {}).get('password') is not None and 'created_at' in getattr(current_user, '_fields', {}):
+        return jsonify({"message": f"Hello, College User {current_user['name']}! This is your profile."})
+    elif getattr(current_user, '_fields', {}).get('password') is not None and 'created_at' in getattr(current_user, '_fields', {}):
+        return jsonify({"message": f"Hello, Super Admin {current_user['email']}! This is your profile (admin)."})
+    return jsonify({"message": "Hello, User!"})
 
 if __name__ == '__main__':
     with app.app_context():

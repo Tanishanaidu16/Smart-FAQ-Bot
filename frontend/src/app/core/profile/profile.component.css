@@ -1,0 +1,303 @@
+/* You might want to include the font import in your global styles.css */
+/* Example: @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600&display=swap'); */
+
+.profile-container {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 40px;
+  background-color: #f8f9fa; /* Light gray background */
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+  font-family: 'Nunito Sans', sans-serif; /* Modern, clean font */
+  color: #343a40; /* Dark gray text */
+  position: relative; /* To position the chatbot icon relative to this container */
+}
+
+h1, h2 {
+  color: #212529;
+  margin-bottom: 25px;
+  text-align: left;
+  border-bottom: 3px solid #dee2e6;
+  padding-bottom: 10px;
+}
+
+p {
+  margin-bottom: 20px;
+  line-height: 1.7;
+  color: #6c757d;
+}
+
+strong {
+  font-weight: 600;
+  color: #212529;
+}
+
+.profile-button {
+  background-color: #28a745; /* Success green */
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.2s ease-in-out;
+  margin-right: 10px;
+}
+
+.profile-button:hover {
+  background-color: #218838;
+}
+
+.editSection {
+  margin-top: 40px;
+  padding-top: 40px;
+  border-top: 1px solid #ced4da;
+}
+
+.editSection h2 {
+  color: #212529;
+  margin-bottom: 20px;
+}
+
+.error-message {
+  background-color: #ffe5e5;
+  color: #dc3545;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border-left: 4px solid #f8d7da;
+}
+
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border-left: 4px solid #c3e6cb;
+}
+
+form div {
+  margin-bottom: 25px;
+}
+
+form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #495057;
+}
+
+form input[type="text"],
+form input[type="email"] {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  box-sizing: border-box;
+  font-size: 1em;
+  color: #495057;
+}
+
+.menu-toggle-button {
+  background-color: #007bff;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.2s ease-in-out;
+  margin-bottom: 20px;
+}
+
+.menu-toggle-button:hover {
+  background-color: #0056b3;
+}
+
+.menu {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+.menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu li {
+  padding: 15px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.menu li:last-child {
+  border-bottom: none;
+}
+
+.menu li a,
+.menu li button {
+  display: block;
+  text-decoration: none;
+  color: #495057;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1em;
+  text-align: left;
+  transition: color 0.2s ease-in-out;
+}
+
+.menu li a:hover,
+.menu li button:hover {
+  color: #007bff;
+}
+
+.menu li label {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  cursor: pointer;
+  color: #495057;
+}
+
+.menu li label input[type="checkbox"] {
+  margin: 0;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #a8b2b8;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.menu li label input[type="checkbox"]:checked {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.menu li label input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
+}
+
+.logout-button {
+  background-color: #dc3545;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
+}
+
+/* Chatbot Icon */
+.chatbot-icon {
+  position: absolute;
+  bottom: -20px;
+  right:-200px;
+  background-color: #007bff;
+  color: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5em;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s ease-in-out;
+}
+
+.chatbot-icon:hover {
+  background-color: #0056b3;
+}
+
+.chatbot-icon::before {
+  content: '💬';
+}
+
+/* Chatbot Popup */
+.chatbot-popup {
+  position: fixed; /* Fixed position relative to the viewport */
+  bottom: 80px;
+  right: 20px;
+  width: 300px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* Hide overflow from messages */
+  display: flex;
+  flex-direction: column;
+  z-index: 1000; /* Ensure it's on top of other elements */
+}
+
+.chatbot-header {
+  background-color: #007bff;
+  color: white;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+}
+
+.chatbot-close-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.2em;
+  cursor: pointer;
+}
+
+.chatbot-messages {
+  flex-grow: 1;
+  padding: 10px;
+  overflow-y: auto; /* Enable scrolling for messages */
+  max-height: 200px; /* Limit the height of the message area */
+}
+
+.chatbot-messages div {
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.chatbot-messages .user-message {
+  background-color: #e2f7cb;
+  text-align: right;
+}
+
+.chatbot-messages .bot-message {
+  background-color: #f0f0f0;
+  text-align: left;
+}
+
+.chatbot-input-area {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid #ccc;
+}
+
+.chatbot-input-area input[type="text"] {
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.chatbot-input-area button {
+  background-color: #007bff;
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}

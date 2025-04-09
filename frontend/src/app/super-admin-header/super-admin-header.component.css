@@ -1,0 +1,42 @@
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #1976d2; /* Primary blue color */
+    color: white;
+    padding: 1rem 2rem; /* Vertical and horizontal padding */
+  }
+  
+  .left-section h2 {
+    margin: 0; /* Remove default heading margin */
+  }
+  
+  .right-section {
+    display: flex;
+    gap: 1.5rem; /* Spacing between elements in the right section */
+    align-items: center;
+  }
+  
+  .right-section a {
+    color: white;
+    text-decoration: none; /* Remove default link underline */
+    font-weight: 500; /* Semi-bold font weight */
+  }
+  
+  .right-section a:hover {
+    text-decoration: underline; /* Add underline on hover for better feedback */
+  }
+  
+  .right-section button {
+    background-color: #f44336; /* Error/Logout red color */
+    color: white;
+    border: none; /* Remove default button border */
+    padding: 0.5rem 1rem; /* Button padding */
+    cursor: pointer; /* Indicate it's clickable */
+    border-radius: 4px; /* Slightly rounded corners */
+    font-size: 1rem; /* Match link font size for consistency */
+  }
+  
+  .right-section button:hover {
+    background-color: #d32f2f; /* Darker red on hover */
+  }
