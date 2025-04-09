@@ -3,6 +3,11 @@
     <h2>SMART FAQ BOT</h2>
   </div>
   <div class="right-section">
+    <ng-container *ngIf="userRole === 'superAdmin'">
+      <a routerLink="/admin/dashboard" routerLinkActive="active">Dashboard</a>
+      <a routerLink="/admin/users" routerLinkActive="active">College Users</a>
+    </ng-container>
+    <a routerLink="/admin/knowledge-tree" routerLinkActive="active">Knowledge Management</a>
     <div class="user-actions">
       <button
         class="user-icon"
@@ -27,7 +32,6 @@
         <span class="visually-hidden">Settings</span>
       </button>
     </div>
-
   </div>
 </header>
 
@@ -48,7 +52,7 @@
   </div>
   <div class="offcanvas-body">
     <ul class="offcanvas-menu">
-      <li><a routerLink="/core/profile" routerLinkActive="active">Profile</a></li>
+      <li><a routerLink="/admin/core/profile" routerLinkActive="active">Profile</a></li>
       <li><a routerLink="/change-password" routerLinkActive="active">Change Password</a></li>
       <li><button (click)="logout()">Logout</button></li>
     </ul>
@@ -71,12 +75,6 @@
     ></button>
   </div>
   <div class="offcanvas-body">
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" [checked]="enableChatbotIcon" (change)="toggleChatbotIcon()" id="enableChatbot">
-      <label class="form-check-label" for="enableChatbot">
-        Enable Chatbot Icon
-      </label>
-    </div>
     <div>
       <a class="dropdown-item" href="#">Download config files</a>
     </div>

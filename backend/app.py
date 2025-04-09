@@ -40,6 +40,7 @@ def token_required(f):
             user_email = data.get('email')
             user_role = data.get('role')
 
+            current_user = None
             if user_role == 'superAdmin':
                 current_user = super_admins.find_one({'email': user_email})
             elif user_role == 'collegeUser':
@@ -55,9 +56,43 @@ def token_required(f):
         except jwt.InvalidTokenError:
             return jsonify({'error': 'Invalid token!'}), 401
         except Exception as e:
-            return jsonify({'error': 'An error occurred while decoding the token.', 'error': str(e)}), 401
+            return jsonify({'error': 'An error occurred while decoding the token.', 'details': str(e)}), 401
 
         return f(current_user, *args, **kwargs)
+    return decorated
+
+# Middleware to verify if the logged-in user is a super admin
+def super_admin_token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+            try:
+                token = request.headers['Authorization'].split(" ")[1]
+            except IndexError:
+                return jsonify({'error': 'Invalid token format!'}), 401
+
+        if not token:
+            return jsonify({'error': 'Token is missing!'}), 401
+
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            user_role = data.get('role')
+            if user_role != 'superAdmin':
+                return jsonify({'error': 'Admin access required!'}), 403
+            user_email = data.get('email')
+            current_user = super_admins.find_one({'email': user_email})
+            if not current_user:
+                return jsonify({'error': 'Super admin not found!'}), 401
+
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token has expired!'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token!'}), 401
+        except Exception as e:
+            return jsonify({'error': 'An error occurred while decoding the token.', 'details': str(e)}), 401
+
+        return f(*args, **kwargs)
     return decorated
 
 # Default super admin user initialization
@@ -95,7 +130,11 @@ def login():
             'role': 'superAdmin',
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
         }, app.config['SECRET_KEY'], algorithm='HS256')
-        return jsonify({"token": token, "role": "superAdmin"}), 200
+        return jsonify({
+            "token": token,
+            "role": "superAdmin",
+            "userProfile": {"username": "Super Admin", "email": email} # Basic admin profile
+        }), 200
 
     # Check if it's a college user
     college_user = college_users.find_one({"email": email})
@@ -105,24 +144,105 @@ def login():
             'role': 'collegeUser',
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
         }, app.config['SECRET_KEY'], algorithm='HS256')
-        return jsonify({"token": token, "role": "collegeUser"}), 200
+        return jsonify({
+            "token": token,
+            "role": "collegeUser",
+            "userProfile": {"username": college_user.get('name', ''), "email": email}
+        }), 200
 
     return jsonify({"error": "Invalid credentials."}), 401
 
 # CRUD API: College Users (Accessible only by Super Admins)
-# ... (Keep the /api/college-users routes as they are, protected by super_admin_token_required if needed)
+# Get all college users
+@app.route('/api/college-users', methods=['GET'])
+@super_admin_token_required
+def get_college_users():
+    users = list(college_users.find())
+    for user in users:
+        user['_id'] = str(user['_id'])
+        user.pop('password', None) # Remove password from the response
+    return jsonify(users)
+
+# Create new college user
+@app.route('/api/college-users', methods=['POST'])
+@super_admin_token_required
+def create_college_user():
+    data = request.json
+    name = data.get('name')
+    email = data.get('email')
+    password = data.get('password')
+
+    if not name or not email or not password:
+        return jsonify({"error": "Missing required fields."}), 400
+
+    if college_users.find_one({"email": email}):
+        return jsonify({"error": "Email already exists."}), 400
+
+    hashed_pw = generate_password_hash(password)
+    user_id = college_users.insert_one({
+        "name": name,
+        "email": email,
+        "password": hashed_pw,
+        "created_at": datetime.datetime.utcnow()
+    }).inserted_id
+
+    return jsonify({"message": "User created.", "id": str(user_id)}), 201
+
+# Get a specific college user
+@app.route('/api/college-users/<user_id>', methods=['GET'])
+@super_admin_token_required
+def get_single_college_user(user_id):
+    user = college_users.find_one({"_id": ObjectId(user_id)})
+    if user:
+        user['_id'] = str(user['_id'])
+        user.pop('password', None)
+        return jsonify(user), 200
+    return jsonify({"error": "User not found."}), 404
+
+# Update college user
+@app.route('/api/college-users/<user_id>', methods=['PUT'])
+@super_admin_token_required
+def update_college_user(user_id):
+    data = request.json
+    name = data.get('name')
+    email = data.get('email')
+    password = data.get('password')
+
+    update_data = {}
+    if name:
+        update_data['name'] = name
+    if email:
+        if college_users.find_one({"email": email, "_id": {"$ne": ObjectId(user_id)}}):
+            return jsonify({"error": "Email already exists."}), 400
+        update_data['email'] = email
+    if password:
+        update_data['password'] = generate_password_hash(password)
+
+    result = college_users.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
+    if result.modified_count > 0:
+        return jsonify({"message": "User updated."}), 200
+    return jsonify({"error": "User not found or no changes made."}), 404
+
+# Delete college user
+@app.route('/api/college-users/<user_id>', methods=['DELETE'])
+@super_admin_token_required
+def delete_college_user(user_id):
+    result = college_users.delete_one({"_id": ObjectId(user_id)})
+    if result.deleted_count > 0:
+        return jsonify({"message": "User deleted."}), 200
+    return jsonify({"error": "User not found."}), 404
 
 # Protected route for college users (example)
 @app.route('/api/profile', methods=['GET'])
 @token_required
 def get_profile(current_user):
-    if getattr(current_user, '_fields', {}).get('password') is not None and 'created_at' in getattr(current_user, '_fields', {}):
-        return jsonify({"message": f"Hello, College User {current_user['name']}! This is your profile."})
-    elif getattr(current_user, '_fields', {}).get('password') is not None and 'created_at' in getattr(current_user, '_fields', {}):
-        return jsonify({"message": f"Hello, Super Admin {current_user['email']}! This is your profile (admin)."})
-    return jsonify({"message": "Hello, User!"})
+    if current_user and 'password' in current_user and 'created_at' in current_user:
+        return jsonify({"message": f"Hello, {current_user.get('name', 'User')}! This is your profile.", "email": current_user['email']})
+    elif current_user and 'password' in current_user and 'created_at' in current_user: # Redundant condition, kept for original logic
+        return jsonify({"message": f"Hello, Super Admin {current_user['email']}! This is your profile."})
+    else:
+        return jsonify({"error": "Could not retrieve profile information."}), 500
 
 if __name__ == '__main__':
-    with app.app_context():
-        init_super_admin()
-    app.run(debug=True, port=5000)
+    init_super_admin()
+    app.run(debug=True)

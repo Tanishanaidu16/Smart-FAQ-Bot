@@ -1,13 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-// import { HeaderComponent } from '../../header/header.component';
-// import { FooterComponent } from '../../footer/footer.component';
+import { Subject, takeUntil } from 'rxjs';
 
 interface UserProfile {
   username: string;
   email: string;
+  // Add other profile properties if your backend returns them
 }
 
 interface ChatMessage {
@@ -22,7 +22,7 @@ interface ChatMessage {
   styleUrls: ['./profile.component.css'],
   imports: [CommonModule, FormsModule, RouterModule]
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit, OnDestroy {
   profile: UserProfile = { username: '', email: '' };
   isEditing = false;
   editProfile: UserProfile = { username: '', email: '' };
@@ -36,11 +36,18 @@ export class ProfileComponent implements OnInit {
   newMessage = '';
   showChatbotIcon: boolean = false; // Property to control chatbot icon visibility
 
+  private ngUnsubscribe = new Subject<void>();
+
   constructor(private router: Router) {}
 
   ngOnInit(): void {
     this.loadProfile();
     this.loadChatbotSettings();
+  }
+
+  ngOnDestroy(): void {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
 
   loadChatbotSettings(): void {
@@ -54,15 +61,18 @@ export class ProfileComponent implements OnInit {
 
   loadProfile(): void {
     const storedProfile = localStorage.getItem('userProfile');
+    console.log('Stored Profile from localStorage:', storedProfile);
     if (storedProfile && storedProfile !== 'undefined') {
       try {
         this.profile = JSON.parse(storedProfile);
         this.editProfile = { ...this.profile };
+        console.log('Loaded Profile:', this.profile);
       } catch (error) {
         console.error('Error parsing userProfile from localStorage:', error);
         this.router.navigate(['/login']);
       }
     } else {
+      console.log('No userProfile found in localStorage, navigating to login.');
       this.router.navigate(['/login']);
     }
   }
@@ -96,6 +106,7 @@ export class ProfileComponent implements OnInit {
 
   logout(): void {
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
     localStorage.removeItem('userProfile');
     this.router.navigate(['/login']);
   }

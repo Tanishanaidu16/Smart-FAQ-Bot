@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
@@ -9,13 +9,20 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./super-admin-header.component.css'],
   imports: [RouterModule, CommonModule, RouterLinkActive]
 })
-export class SuperAdminHeaderComponent {
+export class SuperAdminHeaderComponent implements OnInit {
+  userRole: string | null = null;
+
   constructor(public router: Router) {
-    console.log('SuperAdminHeaderComponent initialized.'); // Console log in constructor
+    console.log('SuperAdminHeaderComponent initialized.');
+  }
+
+  ngOnInit(): void {
+    this.userRole = localStorage.getItem('role');
+    console.log('User Role:', this.userRole);
   }
 
   logout() {
-    localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
     localStorage.removeItem('role');
     this.router.navigate(['/login']);
   }

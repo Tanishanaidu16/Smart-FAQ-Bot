@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   templateUrl: './college-header.component.html',
   styleUrls: ['./college-header.component.css'],
-  imports: [RouterModule, CommonModule, RouterLinkActive]
+  imports: [RouterModule, CommonModule]
 })
 export class CollegeHeaderComponent {
   @Output() chatbotIconToggled = new EventEmitter<boolean>();

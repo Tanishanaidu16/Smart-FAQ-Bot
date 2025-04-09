@@ -1,6 +1,5 @@
 <div class="layout-container">
-    <app-super-admin-header *ngIf="userRole === 'superAdmin'"></app-super-admin-header>
-    <app-college-header *ngIf="userRole === 'collegeUser'"></app-college-header>
+    <app-super-admin-header></app-super-admin-header>
     <div class="main-content">
       <router-outlet></router-outlet>
     </div>
