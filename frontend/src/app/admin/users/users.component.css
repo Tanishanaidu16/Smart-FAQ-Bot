@@ -1,0 +1,15 @@
+.users-container {
+    padding: 2rem;
+  }
+  
+  .create-form, .edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  table.dataTable {
+    width: 100% !important;
+  }
+  

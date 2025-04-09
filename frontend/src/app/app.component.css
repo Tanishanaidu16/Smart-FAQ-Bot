@@ -1,0 +1,14 @@
+.login-container {
+    background: linear-gradient(135deg, #4e73df, #1cc88a);
+  }
+  
+  .card {
+    border: none;
+    border-radius: 12px;
+  }
+  
+  input::placeholder {
+    font-size: 0.95rem;
+    color: #aaa;
+  }
+  
