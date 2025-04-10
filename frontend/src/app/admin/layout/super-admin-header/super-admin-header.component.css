@@ -1,54 +1,80 @@
 /* college-header.component.css */
-.college-header {
+.navbar {
+  background-color: #1976d2 !important;
+  color: white !important;
+  padding: 0.75rem 1rem;
+  position: fixed; /* Ensure the navbar is fixed */
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000; /* Keep it on top */
+}
+
+.container-fluid {
+  padding-left: 1rem;
+  padding-right: 1rem;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  background-color: #1976d2; /* Same primary blue as admin header for consistency */
-  color: white;
-  padding: 1rem 2rem;
+  justify-content: flex-start;
 }
 
-.college-header .left-section h2 {
-  margin: 0;
-}
-
-.college-header .right-section {
-  display: flex;
-  gap: 1.5rem;
-  align-items: center;
-}
-
-.college-header .user-actions {
-  order: 2; /* Move user icon to the right */
-}
-
-.college-header .user-actions .user-icon {
-  background: none;
-  border: none;
-  color: white;
+.navbar-toggler {
+  border: none !important;
+  padding: 0.25rem 0.5rem !important;
+  font-size: 1rem !important;
   cursor: pointer;
+  margin-right: 1rem;
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3e%3cpath stroke='rgba(255, 255, 255, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+  width: 1.5em !important;
+  height: 1.5em !important;
+}
+
+.navbar-brand {
+  color: white !important;
+  margin: 0;
   font-size: 1.5rem;
-  padding: 0;
+  font-weight: bold;
+  margin-right: auto;
 }
 
-.college-header .settings-actions {
-  order: 1; /* Keep settings icon to the left */
+.d-flex.align-items-center {
+  display: flex;
+  align-items: center;
 }
 
-.college-header .settings-actions .settings-icon-button {
+.settings-actions {
+  margin-right: 0.5rem;
+}
+
+.user-actions {
+  /* No specific order needed here */
+}
+
+.settings-icon-button,
+.user-icon {
   background: none;
   color: white;
   border: none;
   padding: 0.5rem;
   cursor: pointer;
   font-size: 1.2rem;
+  line-height: 1;
 }
 
-.college-header .settings-actions .settings-icon-button:hover {
+.user-icon {
+  font-size: 1.5rem;
+  padding: 0;
+}
+
+.settings-icon-button:hover,
+.user-icon:hover {
   opacity: 0.8;
 }
 
-.college-header .settings-actions .settings-icon-button .visually-hidden {
+.visually-hidden {
   position: absolute !important;
   width: 1px !important;
   height: 1px !important;
@@ -60,7 +86,40 @@
   border: 0 !important;
 }
 
-/* Styles for the user options offcanvas body content (applied to both headers) */
+/* Offcanvas styles */
+.offcanvas {
+  --bs-offcanvas-bg: #f8f9fa;
+  --bs-offcanvas-color: #333;
+}
+
+.offcanvas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #ccc;
+}
+
+.offcanvas-title {
+  margin-bottom: 0;
+  font-size: 1.5rem;
+  color: var(--bs-offcanvas-color);
+}
+
+.btn-close {
+  font-size: 1rem;
+  color: #000;
+  opacity: 0.5;
+}
+
+.btn-close:hover {
+  opacity: 0.75;
+}
+
+.offcanvas-body {
+  padding: 1rem;
+}
+
 .offcanvas-body .offcanvas-menu {
   list-style: none;
   padding: 0;
@@ -85,7 +144,7 @@
   color: #333;
   border: 1px solid #ccc;
   border-radius: 5px;
-  background-color: #f8f9fa;
+  background-color: white;
   text-align: left;
   cursor: pointer;
   transition: background-color 0.2s ease-in-out;
@@ -100,11 +159,7 @@
   width: 100%;
 }
 
-/* Styles for the settings offcanvas body content (applied to both headers) */
-.offcanvas-body .form-check {
-  margin-bottom: 1rem;
-}
-
+/* Settings Offcanvas Styles */
 .offcanvas-body .dropdown-item {
   display: block;
   padding: 0.75rem 1rem;
@@ -112,10 +167,52 @@
   color: #333;
   border: 1px solid #ccc;
   border-radius: 5px;
-  background-color: #f8f9fa;
+  background-color: white;
   margin-bottom: 0.75rem;
 }
 
 .offcanvas-body .dropdown-item:hover {
   background-color: #e9ecef;
+}
+
+/* Navbar Offcanvas Styles */
+.offcanvas-end .offcanvas-header {
+  background-color: #f8f9fa;
+}
+
+.offcanvas-end .offcanvas-body {
+  padding: 1rem;
+}
+
+.navbar-nav {
+  margin-top: 1rem;
+}
+
+.navbar-nav .nav-item {
+  margin-bottom: 0.5rem;
+}
+
+.navbar-nav .nav-link {
+  color: #333;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: white;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+  margin-bottom: 0.75rem;
+}
+
+.navbar-nav .nav-link.active {
+  font-weight: bold;
+}
+
+.navbar-nav .nav-link:hover {
+  background-color: #e9ecef;
+}
+
+.d-flex.mt-3 {
+  margin-top: 1rem !important;
 }

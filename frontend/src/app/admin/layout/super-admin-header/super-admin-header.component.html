@@ -1,42 +1,60 @@
-<header class="college-header">
-  <div class="left-section">
-    <h2>SMART FAQ BOT</h2>
-  </div>
-  <div class="right-section">
-    <ng-container *ngIf="userRole === 'superAdmin'">
-      <a routerLink="/admin/dashboard" routerLinkActive="active">Dashboard</a>
-      <a routerLink="/admin/users" routerLinkActive="active">College Users</a>
-    </ng-container>
-    <ng-container *ngIf="userRole === 'collegeUser'">
-      <a routerLink="/admin/knowledge-management" routerLinkActive="active">Knowledge Management</a>
-    </ng-container>
-    <div class="user-actions">
-      <button
-        class="user-icon"
-        type="button"
-        data-bs-toggle="offcanvas"
-        data-bs-target="#userOffcanvasRight"
-        aria-controls="userOffcanvasRight"
-      >
-        <i class="bi bi-person-circle"></i>
-      </button>
+<nav class="navbar bg-body-tertiary fixed-top">
+  <div class="container-fluid">
+    <button class="navbar-toggler me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand" href="#">SMART FAQ BOT</a>
+    <div class="d-flex align-items-center">
+      <div class="settings-actions me-2">
+        <button
+          class="btn btn-outline-secondary settings-icon-button"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#settingsOffcanvasRight"
+          aria-controls="settingsOffcanvasRight"
+        >
+          <i class="bi bi-gear-fill"></i>
+          <span class="visually-hidden">Settings</span>
+        </button>
+      </div>
+      <div class="user-actions me-2">
+        <button
+          class="btn btn-outline-secondary user-icon"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#userOffcanvasRight"
+          aria-controls="userOffcanvasRight"
+        >
+          <i class="bi bi-person-circle"></i>
+        </button>
+      </div>
     </div>
-
-    <div class="settings-actions">
-      <button
-        class="settings-icon-button"
-        type="button"
-        data-bs-toggle="offcanvas"
-        data-bs-target="#settingsOffcanvasLeft"
-        aria-controls="settingsOffcanvasLeft"
-      >
-        <i class="bi bi-gear-fill"></i>
-        <span class="visually-hidden">Settings</span>
-      </button>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+          <ng-container *ngIf="userRole === 'superAdmin'">
+            <li class="nav-item">
+              <a class="nav-link" [routerLink]="['/admin/dashboard']" routerLinkActive="active">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" [routerLink]="['/admin/users']" routerLinkActive="active">College Users</a>
+            </li>
+          </ng-container>
+          <ng-container *ngIf="userRole === 'collegeUser'">
+            <li class="nav-item">
+              <a class="nav-link" [routerLink]="['/admin/knowledge-management']" routerLinkActive="active">Knowledge Management</a>
+            </li>
+          </ng-container>
+        </ul>
+      </div>
     </div>
   </div>
-</header>
-
+</nav>
+ 
 <div
   class="offcanvas offcanvas-end"
   tabindex="-1"
@@ -54,17 +72,17 @@
   </div>
   <div class="offcanvas-body">
     <ul class="offcanvas-menu">
-      <li><a routerLink="/admin/core/profile" routerLinkActive="active">Profile</a></li>
-      <li><a routerLink="/change-password" routerLinkActive="active">Change Password</a></li>
-      <li><button (click)="logout()">Logout</button></li>
+      <li><a [routerLink]="['/admin/core/profile']" routerLinkActive="active">Profile</a></li>
+      <li><a [routerLink]="['/change-password']" routerLinkActive="active">Change Password</a></li>
+      <li><button class="btn btn-link" (click)="logout()">Logout</button></li>
     </ul>
   </div>
 </div>
-
+ 
 <div
-  class="offcanvas offcanvas-start"
+  class="offcanvas offcanvas-end"
   tabindex="-1"
-  id="settingsOffcanvasLeft"
+  id="settingsOffcanvasRight"
   aria-labelledby="settingsOffcanvasLeftLabel"
 >
   <div class="offcanvas-header">

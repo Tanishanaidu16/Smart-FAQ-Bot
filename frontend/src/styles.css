@@ -1,1 +1,12 @@
 /* You can add global styles to this file, and also import other style files */
+/* styles.css */
+body {
+    padding-top: 56px; /* Adjust this value based on your header's height */
+  }
+  
+  /* If your header's height might grow in height on smaller screens, consider using a larger value or media queries */
+  @media (min-width: 576px) {
+    body {
+      padding-top: 64px; /* Adjust if your header's height changes on larger screens */
+    }
+  }
