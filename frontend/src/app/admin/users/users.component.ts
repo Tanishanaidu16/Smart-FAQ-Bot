@@ -2,8 +2,6 @@ import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angula
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
-// import { HeaderComponent } from '../../header1/header/header.component';
-import { FooterComponent } from '../../layout/footer/footer.component';
 import $ from 'jquery';
 import 'datatables.net';
 import * as bootstrap from 'bootstrap';
@@ -16,8 +14,6 @@ import * as bootstrap from 'bootstrap';
   imports: [
     CommonModule,
     FormsModule,
-    HttpClientModule,
-    FooterComponent
   ]
 })
 export class UsersComponent implements OnInit, AfterViewInit {

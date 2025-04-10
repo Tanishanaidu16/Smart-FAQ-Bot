@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { SuperAdminHeaderComponent } from './super-admin-header/super-admin-header.component';// Assuming this is your folder structure
-import { CollegeHeaderComponent } from './college-header/college-header.component'; // Assuming this is your folder structure
 import { FooterComponent } from './footer/footer.component'; // Adjust the path if your FooterComponent is in a different folder
+import { SuperAdminHeaderComponent } from './super-admin-header/super-admin-header.component'; // Assuming this is your folder structure
 
 @Component({
   selector: 'app-layout',
