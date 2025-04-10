@@ -7,7 +7,9 @@
       <a routerLink="/admin/dashboard" routerLinkActive="active">Dashboard</a>
       <a routerLink="/admin/users" routerLinkActive="active">College Users</a>
     </ng-container>
-    <a routerLink="/admin/knowledge-tree" routerLinkActive="active">Knowledge Management</a>
+    <ng-container *ngIf="userRole === 'collegeUser'">
+      <a routerLink="/admin/knowledge-tree" routerLinkActive="active">Knowledge Management</a>
+    </ng-container>
     <div class="user-actions">
       <button
         class="user-icon"
