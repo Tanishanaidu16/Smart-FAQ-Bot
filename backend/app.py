@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
@@ -9,7 +9,9 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 
 app = Flask(__name__)
-CORS(app)
+
+# Updated CORS Configuration
+CORS(app, resources={r"/api/*": {"origins": "http://localhost:4200"}}, supports_credentials=True)
 
 # Secret key for JWT
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'devsecret')
@@ -21,7 +23,7 @@ db = client.get_database()
 college_users = db.college_users
 super_admins = db.super_admins
 
-# Middleware to verify JWT token
+# JWT token verification middleware
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -61,7 +63,7 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
     return decorated
 
-# Middleware to verify if the logged-in user is a super admin
+# Middleware to verify if the user is a super admin
 def super_admin_token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -95,7 +97,14 @@ def super_admin_token_required(f):
         return f(*args, **kwargs)
     return decorated
 
-# Default super admin user initialization
+# Add CORS headers to all responses
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+    return response
+
+# Initialize default super admin
 def init_super_admin():
     default_email = "admin@platform.com"
     default_password = "admin123"
@@ -112,7 +121,7 @@ def init_super_admin():
     else:
         print("[Init] Super admin already exists.")
 
-# Single Login Endpoint
+# Login route
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.json
@@ -122,7 +131,6 @@ def login():
     if not email or not password:
         return jsonify({"error": "Email and password are required."}), 400
 
-    # Check if it's a super admin
     super_admin = super_admins.find_one({"email": email})
     if super_admin and check_password_hash(super_admin['password'], password):
         token = jwt.encode({
@@ -133,10 +141,9 @@ def login():
         return jsonify({
             "token": token,
             "role": "superAdmin",
-            "userProfile": {"username": "Super Admin", "email": email} # Basic admin profile
+            "userProfile": {"username": "Super Admin", "email": email}
         }), 200
 
-    # Check if it's a college user
     college_user = college_users.find_one({"email": email})
     if college_user and check_password_hash(college_user['password'], password):
         token = jwt.encode({
@@ -152,18 +159,16 @@ def login():
 
     return jsonify({"error": "Invalid credentials."}), 401
 
-# CRUD API: College Users (Accessible only by Super Admins)
-# Get all college users
+# College User CRUD APIs (super admin only)
 @app.route('/api/college-users', methods=['GET'])
 @super_admin_token_required
 def get_college_users():
     users = list(college_users.find())
     for user in users:
         user['_id'] = str(user['_id'])
-        user.pop('password', None) # Remove password from the response
+        user.pop('password', None)
     return jsonify(users)
 
-# Create new college user
 @app.route('/api/college-users', methods=['POST'])
 @super_admin_token_required
 def create_college_user():
@@ -188,7 +193,6 @@ def create_college_user():
 
     return jsonify({"message": "User created.", "id": str(user_id)}), 201
 
-# Get a specific college user
 @app.route('/api/college-users/<user_id>', methods=['GET'])
 @super_admin_token_required
 def get_single_college_user(user_id):
@@ -199,7 +203,6 @@ def get_single_college_user(user_id):
         return jsonify(user), 200
     return jsonify({"error": "User not found."}), 404
 
-# Update college user
 @app.route('/api/college-users/<user_id>', methods=['PUT'])
 @super_admin_token_required
 def update_college_user(user_id):
@@ -223,7 +226,6 @@ def update_college_user(user_id):
         return jsonify({"message": "User updated."}), 200
     return jsonify({"error": "User not found or no changes made."}), 404
 
-# Delete college user
 @app.route('/api/college-users/<user_id>', methods=['DELETE'])
 @super_admin_token_required
 def delete_college_user(user_id):
@@ -232,17 +234,82 @@ def delete_college_user(user_id):
         return jsonify({"message": "User deleted."}), 200
     return jsonify({"error": "User not found."}), 404
 
-# Protected route for college users (example)
 @app.route('/api/profile', methods=['GET'])
 @token_required
 def get_profile(current_user):
     if current_user and 'password' in current_user and 'created_at' in current_user:
-        return jsonify({"message": f"Hello, {current_user.get('name', 'User')}! This is your profile.", "email": current_user['email']})
-    elif current_user and 'password' in current_user and 'created_at' in current_user: # Redundant condition, kept for original logic
-        return jsonify({"message": f"Hello, Super Admin {current_user['email']}! This is your profile."})
+        return jsonify({
+            "message": f"Hello, {current_user.get('name', 'User')}! This is your profile.",
+            "email": current_user['email']
+        })
     else:
         return jsonify({"error": "Could not retrieve profile information."}), 500
 
+
+#below are the knowlegde managment api............
+
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+collection = db['pdf_files']
+
+@app.route('/upload', methods=['POST'])
+def upload_pdf():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    if not file.filename.lower().endswith('.pdf'):
+        return jsonify({'error': 'Only PDF files are allowed'}), 400
+
+    filename = file.filename
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(filepath)
+
+    file_data = {
+        'filename': filename,
+        'path': filepath
+    }
+    result = collection.insert_one(file_data)
+    return jsonify({'message': 'PDF uploaded', 'file_id': str(result.inserted_id)})
+
+@app.route('/files', methods=['GET'])
+def list_files():
+    files = []
+    for file_doc in collection.find():
+        files.append({
+            'id': str(file_doc['_id']),
+            'filename': file_doc['filename']
+        })
+    return jsonify(files)
+
+@app.route('/download/<file_id>', methods=['GET'])
+def download_file(file_id):
+    file_doc = collection.find_one({'_id': ObjectId(file_id)})
+    if not file_doc:
+        return jsonify({'error': 'File not found'}), 404
+
+    return send_from_directory(app.config['UPLOAD_FOLDER'], file_doc['filename'], as_attachment=True)
+
+@app.route('/delete/<file_id>', methods=['DELETE'])
+def delete_file(file_id):
+    file_doc = collection.find_one({'_id': ObjectId(file_id)})
+    if not file_doc:
+        return jsonify({'error': 'File not found'}), 404
+
+    try:
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], file_doc['filename']))
+    except Exception as e:
+        print(f"File deletion error: {e}")
+
+    collection.delete_one({'_id': ObjectId(file_id)})
+    return jsonify({'message': 'File deleted'})
+
+# Run the app
 if __name__ == '__main__':
     init_super_admin()
     app.run(debug=True)

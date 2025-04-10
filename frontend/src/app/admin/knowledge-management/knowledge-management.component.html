@@ -1,2 +1,20 @@
-<h2>Knowledge Management</h2>
-<p>{{ welcomeMessage }}</p>
+
+<h2>My PDF Files</h2>
+
+<div class="upload-box">
+  <input type="file" (change)="onFileSelected($event)">
+  <button class="upload-button" (click)="uploadFile()">Upload</button>
+</div>
+
+<div class="file-grid">
+  <div class="file-card" *ngFor="let file of files">
+    <div class="file-icon">📄</div>
+    <div class="file-name">{{ file.filename }}</div>
+    <div class="card-buttons">
+      <button (click)="downloadFile(file.id, file.filename)">Download</button>
+      <button (click)="deleteFile(file.id)">Delete</button>
+    </div>
+  </div>
+</div>
+
+
