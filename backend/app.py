@@ -246,16 +246,20 @@ def get_profile(current_user):
         return jsonify({"error": "Could not retrieve profile information."}), 500
  
  
-#below are the knowlegde managment api............
+# ------------------------------
+# Knowledge Management Section
+# ------------------------------
  
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
  
-collection = db['pdf_files']
+pdf_collection = db['pdf_files']
  
-@app.route('/upload', methods=['POST'])
-def upload_pdf():
+# Upload PDF (College User Only)
+@app.route('/api/upload', methods=['POST'])
+@token_required
+def upload_pdf(current_user):
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
  
@@ -264,7 +268,7 @@ def upload_pdf():
         return jsonify({'error': 'No selected file'}), 400
  
     if not file.filename.lower().endswith('.pdf'):
-        return jsonify({'error': 'Only PDF files are allowed'}), 400
+        return jsonify({'error': 'Only PDF files allowed'}), 400
  
     filename = file.filename
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -272,42 +276,37 @@ def upload_pdf():
  
     file_data = {
         'filename': filename,
-        'path': filepath
+        'path': filepath,
+        'email': current_user['email']
     }
-    result = collection.insert_one(file_data)
-    return jsonify({'message': 'PDF uploaded', 'file_id': str(result.inserted_id)})
+    pdf_collection.insert_one(file_data)
+    return jsonify({'message': 'PDF uploaded successfully'}), 200
  
-@app.route('/files', methods=['GET'])
-def list_files():
-    files = []
-    for file_doc in collection.find():
-        files.append({
-            'id': str(file_doc['_id']),
-            'filename': file_doc['filename']
-        })
-    return jsonify(files)
  
-@app.route('/download/<file_id>', methods=['GET'])
-def download_file(file_id):
-    file_doc = collection.find_one({'_id': ObjectId(file_id)})
+# List PDFs for Logged-in College User
+@app.route('/api/files', methods=['GET'])
+@token_required
+def list_user_files(current_user):
+    user_email = current_user['email']
+    files = pdf_collection.find({'email': user_email})
+    result = [{'id': str(f['_id']), 'filename': f['filename']} for f in files]
+    return jsonify(result), 200
+ 
+# Delete PDF (Only if uploaded by the same user)
+@app.route('/api/delete/<file_id>', methods=['DELETE'])
+@token_required
+def delete_user_file(current_user, file_id):
+    file_doc = pdf_collection.find_one({'_id': ObjectId(file_id), 'email': current_user['email']})
     if not file_doc:
-        return jsonify({'error': 'File not found'}), 404
- 
-    return send_from_directory(app.config['UPLOAD_FOLDER'], file_doc['filename'], as_attachment=True)
- 
-@app.route('/delete/<file_id>', methods=['DELETE'])
-def delete_file(file_id):
-    file_doc = collection.find_one({'_id': ObjectId(file_id)})
-    if not file_doc:
-        return jsonify({'error': 'File not found'}), 404
+        return jsonify({'error': 'File not found or unauthorized'}), 404
  
     try:
         os.remove(os.path.join(app.config['UPLOAD_FOLDER'], file_doc['filename']))
     except Exception as e:
-        print(f"File deletion error: {e}")
+        print(f"Failed to delete file: {e}")
  
-    collection.delete_one({'_id': ObjectId(file_id)})
-    return jsonify({'message': 'File deleted'})
+    pdf_collection.delete_one({'_id': ObjectId(file_id)})
+    return jsonify({'message': 'File deleted'}), 200
  
 # Run the app
 if __name__ == '__main__':

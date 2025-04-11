@@ -1,63 +1,77 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { HttpService } from '../../service/http.service';
 import { CommonModule } from '@angular/common';
-import { DocumentService } from '../../../services/document.service';
-import { HttpClient } from '@angular/common/http';
-
+ 
 @Component({
   selector: 'app-knowledge-management',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './knowledge-management.component.html',
-  styleUrls: ['./knowledge-management.component.css']
+  templateUrl: './knowledge-management.component.html'
 })
-export class KnowledgeManagementComponent {
+export class KnowledgeManagementComponent implements OnInit {
   selectedFile: File | null = null;
   files: any[] = [];
-
-  constructor(private http: HttpClient) {
-    this.loadFiles();
+ 
+  constructor(private httpService: HttpService) {}
+ 
+  ngOnInit(): void {
+    this.fetchFiles();
   }
-
-  onFileSelected(event: any) {
-    this.selectedFile = event.target.files[0];
+ 
+  onFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input?.files?.length) {
+      this.selectedFile = input.files[0];
+    }
   }
-
-  uploadFile() {
-    if (!this.selectedFile) return;
-
+ 
+  uploadPdf(event: Event): void {
+    event.preventDefault();
+ 
+    if (!this.selectedFile) {
+      alert('Please select a PDF file');
+      return;
+    }
+ 
     const formData = new FormData();
-    formData.append('file', this.selectedFile);
-
-    this.http.post('http://localhost:5000/upload', formData).subscribe({
+    formData.append('file', this.selectedFile); // this key MUST be 'file'
+ 
+    this.httpService.rawPost('api/upload', formData).subscribe({
       next: () => {
+        alert('✅ PDF uploaded successfully');
         this.selectedFile = null;
-        this.loadFiles();
+        this.fetchFiles();
       },
-      error: err => alert('Upload failed: ' + (err.error?.error || err.message))
+      error: (err) => {
+        console.error('Upload error:', err);
+        alert('❌ Upload failed');
+      }
     });
   }
-
-  loadFiles() {
-    this.http.get<any[]>('http://localhost:5000/files').subscribe(data => {
-      this.files = data;
+ 
+ 
+  fetchFiles(): void {
+    this.httpService.get<any[]>('api/files').subscribe({
+      next: (res) => {
+        this.files = res;
+      },
+      error: (err) => {
+        console.error('Failed to load files:', err);
+      }
     });
   }
-
-  downloadFile(fileId: string, filename: string) {
-    this.http.get(`http://localhost:5000/download/${fileId}`, { responseType: 'blob' })
-      .subscribe(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      });
-  }
-
-  deleteFile(fileId: string) {
-    this.http.delete(`http://localhost:5000/delete/${fileId}`).subscribe(() => {
-      this.loadFiles();
+ 
+  deletePdf(id: string): void {
+    this.httpService.delete(`api/delete/${id}`).subscribe({
+      next: () => {
+        this.files = this.files.filter(file => file.id !== id);
+        alert('🗑️ File deleted successfully!');
+      },
+      error: (err) => {
+        console.error('Delete error:', err);
+        alert('❌ Failed to delete file.');
+      }
     });
   }
+ 
 }
