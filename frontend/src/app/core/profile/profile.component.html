@@ -1,5 +1,6 @@
 <div class="profile-container">
-  <h1>Profile</h1>
+  <!-- Profile Heading only when not in Edit Mode -->
+  <h1 *ngIf="!isEditing">Profile</h1>
 
   <div *ngIf="!isEditing; else editSection">
     <p><strong>Username:</strong> {{ profile.username }}</p>
@@ -24,5 +25,4 @@
       <button class="profile-button" type="button" (click)="disableEditMode()">Cancel</button>
     </form>
   </ng-template>
-
-  </div>
+</div>

@@ -5,6 +5,7 @@ import { ProfileComponent } from '../core/profile/profile.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { UsersComponent } from './users/users.component';
 import { KnowledgeManagementComponent } from './knowledge-management/knowledge-management.component';
+import { ChangePasswordComponent } from '../core/change-password/change-password.component';
 
 export const routes: Routes = [
   {
@@ -16,6 +17,7 @@ export const routes: Routes = [
   { path: 'users', component: UsersComponent },
   { path: 'knowledge-management', component: KnowledgeManagementComponent }, // <--- UPDATED PATH
   { path: 'core/profile', component: ProfileComponent },
+  { path: 'change-password', component: ChangePasswordComponent },
 ];
 
 @NgModule({

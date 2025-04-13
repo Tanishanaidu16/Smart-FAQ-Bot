@@ -1,4 +1,4 @@
-/* college-header.component.css */
+/* Navbar styles */
 .navbar {
   background-color: #1976d2 !important;
   color: white !important;
@@ -172,11 +172,11 @@
 }
 
 /* Navbar Offcanvas Styles */
-.offcanvas-end .offcanvas-header {
+.offcanvas-start .offcanvas-header {
   background-color: #f8f9fa;
 }
 
-.offcanvas-end .offcanvas-body {
+.offcanvas-start .offcanvas-body {
   padding: 1rem;
 }
 
@@ -188,8 +188,10 @@
   margin-bottom: 0.5rem;
 }
 
+/* Update: Ensure all links in navbar have normal weight (no bold) */
 .navbar-nav .nav-link {
-  color: #333;
+  font-weight: normal !important; /* Remove bold from all links */
+  color: #333 !important;
   padding: 0.75rem 1rem;
   text-decoration: none;
   border: 1px solid #ccc;
@@ -201,10 +203,17 @@
   margin-bottom: 0.75rem;
 }
 
+/* Update: Ensure no link is bold when it becomes active */
 .navbar-nav .nav-link.active {
-  font-weight: bold;
+  font-weight: normal !important; /* Remove bold when active */
 }
 
+/* Ensure all navbar links (including Knowledge Management) stay light */
+.navbar-nav .nav-link[href*="knowledge-management"] {
+  font-weight: normal !important; /* Keep "Knowledge Management" light */
+}
+
+/* Ensure that nav links do not become bold when hovered or active */
 .navbar-nav .nav-link:hover {
   background-color: #e9ecef;
 }

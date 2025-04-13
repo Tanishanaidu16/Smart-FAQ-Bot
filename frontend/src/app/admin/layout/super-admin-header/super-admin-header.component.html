@@ -29,7 +29,8 @@
         </button>
       </div>
     </div>
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+    <!-- Offcanvas Menu (Now on the Left) -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
       <div class="offcanvas-header">
         <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Menu</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -55,44 +56,26 @@
   </div>
 </nav>
  
-<div
-  class="offcanvas offcanvas-end"
-  tabindex="-1"
-  id="userOffcanvasRight"
-  aria-labelledby="userOffcanvasRightLabel"
->
+<!-- Offcanvas for User Profile -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="userOffcanvasRight" aria-labelledby="userOffcanvasRightLabel">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title" id="userOffcanvasRightLabel">Manage Account</h5>
-    <button
-      type="button"
-      class="btn-close text-reset"
-      data-bs-dismiss="offcanvas"
-      aria-label="Close"
-    ></button>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
   <div class="offcanvas-body">
     <ul class="offcanvas-menu">
       <li><a [routerLink]="['/admin/core/profile']" routerLinkActive="active">Profile</a></li>
-      <li><a [routerLink]="['/change-password']" routerLinkActive="active">Change Password</a></li>
+      <li><a [routerLink]="['/admin/change-password']" routerLinkActive="active">Change Password</a></li>
       <li><button class="btn btn-link" (click)="logout()">Logout</button></li>
     </ul>
   </div>
 </div>
  
-<div
-  class="offcanvas offcanvas-end"
-  tabindex="-1"
-  id="settingsOffcanvasRight"
-  aria-labelledby="settingsOffcanvasLeftLabel"
->
+<!-- Offcanvas for Settings -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="settingsOffcanvasRight" aria-labelledby="settingsOffcanvasLeftLabel">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title" id="settingsOffcanvasLeftLabel">Settings</h5>
-    <button
-      type="button"
-      class="btn-close text-reset"
-      data-bs-dismiss="offcanvas"
-      aria-label="Close"
-    ></button>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
   <div class="offcanvas-body">
     <div>

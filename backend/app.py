@@ -1,118 +1,66 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask
 from flask_cors import CORS
-from werkzeug.security import generate_password_hash, check_password_hash
-import jwt
-import datetime
 import os
-from functools import wraps
+import datetime
 from pymongo import MongoClient
-from bson.objectid import ObjectId
- 
+from werkzeug.security import generate_password_hash
+
+# Initialize Flask app
 app = Flask(__name__)
- 
-# Updated CORS Configuration
+
+# CORS setup
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:4200"}}, supports_credentials=True)
- 
-# Secret key for JWT
+
+# App configs
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'devsecret')
- 
-# MongoDB connection setup
+app.config['UPLOAD_FOLDER'] = 'uploads'
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# MongoDB setup
 mongo_uri = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/chatbot_platform')
 client = MongoClient(mongo_uri)
 db = client.get_database()
-college_users = db.college_users
-super_admins = db.super_admins
- 
-# JWT token verification middleware
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
-        if 'Authorization' in request.headers:
-            try:
-                token = request.headers['Authorization'].split(" ")[1]
-            except IndexError:
-                return jsonify({'error': 'Invalid token format!'}), 401
- 
-        if not token:
-            return jsonify({'error': 'Token is missing!'}), 401
- 
-        try:
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            user_email = data.get('email')
-            user_role = data.get('role')
- 
-            current_user = None
-            if user_role == 'superAdmin':
-                current_user = super_admins.find_one({'email': user_email})
-            elif user_role == 'collegeUser':
-                current_user = college_users.find_one({'email': user_email})
-            else:
-                return jsonify({'error': 'Invalid token role!'}), 401
- 
-            if not current_user:
-                return jsonify({'error': 'User not found!'}), 401
- 
-        except jwt.ExpiredSignatureError:
-            return jsonify({'error': 'Token has expired!'}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({'error': 'Invalid token!'}), 401
-        except Exception as e:
-            return jsonify({'error': 'An error occurred while decoding the token.', 'details': str(e)}), 401
- 
-        return f(current_user, *args, **kwargs)
-    return decorated
- 
-# Middleware to verify if the user is a super admin
-def super_admin_token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
-        if 'Authorization' in request.headers:
-            try:
-                token = request.headers['Authorization'].split(" ")[1]
-            except IndexError:
-                return jsonify({'error': 'Invalid token format!'}), 401
- 
-        if not token:
-            return jsonify({'error': 'Token is missing!'}), 401
- 
-        try:
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            user_role = data.get('role')
-            if user_role != 'superAdmin':
-                return jsonify({'error': 'Admin access required!'}), 403
-            user_email = data.get('email')
-            current_user = super_admins.find_one({'email': user_email})
-            if not current_user:
-                return jsonify({'error': 'Super admin not found!'}), 401
- 
-        except jwt.ExpiredSignatureError:
-            return jsonify({'error': 'Token has expired!'}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({'error': 'Invalid token!'}), 401
-        except Exception as e:
-            return jsonify({'error': 'An error occurred while decoding the token.', 'details': str(e)}), 401
- 
-        return f(*args, **kwargs)
-    return decorated
- 
-# Add CORS headers to all responses
+
+# Attach collections to app
+app.mongo_db = db
+app.college_users = db.college_users
+app.super_admins = db.super_admins
+
+# =========================
+# Register Blueprints
+# =========================
+from blueprints.auth import auth_bp
+from blueprints.admin import admin_bp
+from blueprints.user import user_bp
+from blueprints.file_manager import file_bp
+from blueprints.change_password import change_password_bp  # 👈 NEW IMPORT
+
+# Register with appropriate prefixes
+app.register_blueprint(auth_bp, url_prefix='/api')
+app.register_blueprint(admin_bp, url_prefix='/api/college-users')
+app.register_blueprint(user_bp, url_prefix='/api')
+app.register_blueprint(file_bp, url_prefix='/api')
+app.register_blueprint(change_password_bp, url_prefix='/api')  # 👈 REGISTER NEW BLUEPRINT
+
+# =========================
+# CORS Headers for all responses
+# =========================
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
     return response
- 
-# Initialize default super admin
+
+# =========================
+# Default Super Admin Creator
+# =========================
 def init_super_admin():
     default_email = "admin@platform.com"
     default_password = "admin123"
- 
-    existing_admin = super_admins.find_one({"email": default_email})
-    if not existing_admin:
+
+    if not app.super_admins.find_one({"email": default_email}):
         hashed_pw = generate_password_hash(default_password)
-        super_admins.insert_one({
+        app.super_admins.insert_one({
             "email": default_email,
             "password": hashed_pw,
             "created_at": datetime.datetime.utcnow()
@@ -120,196 +68,10 @@ def init_super_admin():
         print("[Init] Default super admin created.")
     else:
         print("[Init] Super admin already exists.")
- 
-# Login route
-@app.route('/api/login', methods=['POST'])
-def login():
-    data = request.json
-    email = data.get('email')
-    password = data.get('password')
- 
-    if not email or not password:
-        return jsonify({"error": "Email and password are required."}), 400
- 
-    super_admin = super_admins.find_one({"email": email})
-    if super_admin and check_password_hash(super_admin['password'], password):
-        token = jwt.encode({
-            'email': email,
-            'role': 'superAdmin',
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
-        }, app.config['SECRET_KEY'], algorithm='HS256')
-        return jsonify({
-            "token": token,
-            "role": "superAdmin",
-            "userProfile": {"username": "Super Admin", "email": email}
-        }), 200
- 
-    college_user = college_users.find_one({"email": email})
-    if college_user and check_password_hash(college_user['password'], password):
-        token = jwt.encode({
-            'email': email,
-            'role': 'collegeUser',
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
-        }, app.config['SECRET_KEY'], algorithm='HS256')
-        return jsonify({
-            "token": token,
-            "role": "collegeUser",
-            "userProfile": {"username": college_user.get('name', ''), "email": email}
-        }), 200
- 
-    return jsonify({"error": "Invalid credentials."}), 401
- 
-# College User CRUD APIs (super admin only)
-@app.route('/api/college-users', methods=['GET'])
-@super_admin_token_required
-def get_college_users():
-    users = list(college_users.find())
-    for user in users:
-        user['_id'] = str(user['_id'])
-        user.pop('password', None)
-    return jsonify(users)
- 
-@app.route('/api/college-users', methods=['POST'])
-@super_admin_token_required
-def create_college_user():
-    data = request.json
-    name = data.get('name')
-    email = data.get('email')
-    password = data.get('password')
- 
-    if not name or not email or not password:
-        return jsonify({"error": "Missing required fields."}), 400
- 
-    if college_users.find_one({"email": email}):
-        return jsonify({"error": "Email already exists."}), 400
- 
-    hashed_pw = generate_password_hash(password)
-    user_id = college_users.insert_one({
-        "name": name,
-        "email": email,
-        "password": hashed_pw,
-        "created_at": datetime.datetime.utcnow()
-    }).inserted_id
- 
-    return jsonify({"message": "User created.", "id": str(user_id)}), 201
- 
-@app.route('/api/college-users/<user_id>', methods=['GET'])
-@super_admin_token_required
-def get_single_college_user(user_id):
-    user = college_users.find_one({"_id": ObjectId(user_id)})
-    if user:
-        user['_id'] = str(user['_id'])
-        user.pop('password', None)
-        return jsonify(user), 200
-    return jsonify({"error": "User not found."}), 404
- 
-@app.route('/api/college-users/<user_id>', methods=['PUT'])
-@super_admin_token_required
-def update_college_user(user_id):
-    data = request.json
-    name = data.get('name')
-    email = data.get('email')
-    password = data.get('password')
- 
-    update_data = {}
-    if name:
-        update_data['name'] = name
-    if email:
-        if college_users.find_one({"email": email, "_id": {"$ne": ObjectId(user_id)}}):
-            return jsonify({"error": "Email already exists."}), 400
-        update_data['email'] = email
-    if password:
-        update_data['password'] = generate_password_hash(password)
- 
-    result = college_users.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
-    if result.modified_count > 0:
-        return jsonify({"message": "User updated."}), 200
-    return jsonify({"error": "User not found or no changes made."}), 404
- 
-@app.route('/api/college-users/<user_id>', methods=['DELETE'])
-@super_admin_token_required
-def delete_college_user(user_id):
-    result = college_users.delete_one({"_id": ObjectId(user_id)})
-    if result.deleted_count > 0:
-        return jsonify({"message": "User deleted."}), 200
-    return jsonify({"error": "User not found."}), 404
- 
-@app.route('/api/profile', methods=['GET'])
-@token_required
-def get_profile(current_user):
-    if current_user and 'password' in current_user and 'created_at' in current_user:
-        return jsonify({
-            "message": f"Hello, {current_user.get('name', 'User')}! This is your profile.",
-            "email": current_user['email']
-        })
-    else:
-        return jsonify({"error": "Could not retrieve profile information."}), 500
- 
- 
-# ------------------------------
-# Knowledge Management Section
-# ------------------------------
- 
-UPLOAD_FOLDER = 'uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
- 
-pdf_collection = db['pdf_files']
- 
-# Upload PDF (College User Only)
-@app.route('/api/upload', methods=['POST'])
-@token_required
-def upload_pdf(current_user):
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
- 
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
- 
-    if not file.filename.lower().endswith('.pdf'):
-        return jsonify({'error': 'Only PDF files allowed'}), 400
- 
-    filename = file.filename
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(filepath)
- 
-    file_data = {
-        'filename': filename,
-        'path': filepath,
-        'email': current_user['email']
-    }
-    pdf_collection.insert_one(file_data)
-    return jsonify({'message': 'PDF uploaded successfully'}), 200
- 
- 
-# List PDFs for Logged-in College User
-@app.route('/api/files', methods=['GET'])
-@token_required
-def list_user_files(current_user):
-    user_email = current_user['email']
-    files = pdf_collection.find({'email': user_email})
-    result = [{'id': str(f['_id']), 'filename': f['filename']} for f in files]
-    return jsonify(result), 200
- 
-# Delete PDF (Only if uploaded by the same user)
-@app.route('/api/delete/<file_id>', methods=['DELETE'])
-@token_required
-def delete_user_file(current_user, file_id):
-    file_doc = pdf_collection.find_one({'_id': ObjectId(file_id), 'email': current_user['email']})
-    if not file_doc:
-        return jsonify({'error': 'File not found or unauthorized'}), 404
- 
-    try:
-        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], file_doc['filename']))
-    except Exception as e:
-        print(f"Failed to delete file: {e}")
- 
-    pdf_collection.delete_one({'_id': ObjectId(file_id)})
-    return jsonify({'message': 'File deleted'}), 200
- 
-# Run the app
+
+# =========================
+# Start App
+# =========================
 if __name__ == '__main__':
     init_super_admin()
     app.run(debug=True)
- 
