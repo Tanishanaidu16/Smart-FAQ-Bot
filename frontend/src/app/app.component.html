@@ -1,1 +1,14 @@
+<!-- ng-http-loader configuration with proper property binding -->
+<ng-http-loader>
+    [backdrop]="false"
+    [backgroundColor]="'#ff0000'"
+    [debounceDelay]="100"
+    [extraDuration]="2000"
+    [minDuration]="2000"
+    [opacity]="0.6" <!-- Corrected: Ensure opacity is a valid number -->
+    [backdropBackgroundColor]="'#777777'"
+    [spinner]="'spinkit.skWave'">
+</ng-http-loader>
+
+<!-- Your existing router outlet where views are rendered -->
 <router-outlet></router-outlet>
