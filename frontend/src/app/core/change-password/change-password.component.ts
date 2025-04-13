@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { HttpService } from '../../service/http.service'; // Import HttpService
+import { HttpService } from '../../service/http.service';
 
 @Component({
   selector: 'app-change-password',
@@ -21,58 +21,56 @@ export class ChangePasswordComponent {
   constructor(private router: Router, private httpService: HttpService) {}
 
   changePassword(): void {
-    // Check if all fields are filled
+    // Validate fields
     if (!this.currentPassword || !this.newPassword || !this.confirmPassword) {
       this.errorMessage = 'Please fill in all fields.';
       this.successMessage = '';
       return;
     }
 
-    // Check if the new password and confirm password match
+    // Match new and confirm password
     if (this.newPassword !== this.confirmPassword) {
       this.errorMessage = 'New password and confirm password do not match.';
       this.successMessage = '';
       return;
     }
 
-    // Get the token from local storage
-    const token = localStorage.getItem('authToken'); // Ensure you're using the same key as in the backend
+    // Ensure user is authenticated
+    const token = localStorage.getItem('authToken');
     if (!token) {
       this.errorMessage = 'Unauthorized. Please log in.';
       return;
     }
 
-    // Set up the request body
     const body = {
       currentPassword: this.currentPassword,
       newPassword: this.newPassword
     };
 
-    // Call the HttpService to send the PUT request
-    this.httpService.put('api/profile/change-password', body)
-      .subscribe({
-        next: (response: any) => {
-          this.successMessage = response.message;
-          this.errorMessage = '';
-          setTimeout(() => {
-            // Navigate to the profile page after 3 seconds
-            this.router.navigate(['/profile']);
-          }, 3000);
-          // Clear the form fields after successful change
-          this.currentPassword = '';
-          this.newPassword = '';
-          this.confirmPassword = '';
-        },
-        error: (error: any) => {
-          // Handle error if the password change fails
-          this.errorMessage = error.error.message || 'Failed to change password.';
-          this.successMessage = '';
-        }
-      });
+    this.httpService.put('api/profile/change-password', body).subscribe({
+      next: (response: any) => {
+        this.successMessage = response.message;
+        this.errorMessage = '';
+
+        // ✅ Show alert immediately
+        alert('Password updated successfully!');
+
+        // ✅ Redirect to profile page
+        this.router.navigate(['admin/core/profile']);
+
+        // Clear fields
+        this.currentPassword = '';
+        this.newPassword = '';
+        this.confirmPassword = '';
+      },
+      error: (error: any) => {
+        this.errorMessage = error.error.message || 'Failed to change password.';
+        this.successMessage = '';
+      }
+    });
   }
 
   goBack(): void {
-    // Navigate back to the profile page
     this.router.navigate(['/admin/core/profile']);
   }
 }

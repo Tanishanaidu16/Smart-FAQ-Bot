@@ -65,7 +65,9 @@
   <div class="offcanvas-body">
     <ul class="offcanvas-menu">
       <li><a [routerLink]="['/admin/core/profile']" routerLinkActive="active">Profile</a></li>
+      <ng-container *ngIf="userRole === 'collegeUser'">
       <li><a [routerLink]="['/admin/change-password']" routerLinkActive="active">Change Password</a></li>
+    </ng-container>
       <li><button class="btn btn-link" (click)="logout()">Logout</button></li>
     </ul>
   </div>

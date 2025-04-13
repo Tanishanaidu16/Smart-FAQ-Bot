@@ -6,8 +6,19 @@ from bson.objectid import ObjectId
 change_password_bp = Blueprint('change_password', __name__)
 
 @change_password_bp.route('/profile/change-password', methods=['PUT', 'OPTIONS'])
+def change_password():
+    if request.method == 'OPTIONS':
+        # CORS Preflight - no auth needed
+        return '', 200
+
+    # Secure route - require token
+    return _change_password_handler()
+
+
+from .middlewares import token_required
+
 @token_required
-def change_password(current_user):
+def _change_password_handler(current_user):
     data = request.get_json()
     current_password = data.get('currentPassword')
     new_password = data.get('newPassword')
@@ -19,8 +30,7 @@ def change_password(current_user):
         return jsonify({"message": "Incorrect current password"}), 400
 
     hashed_new_password = generate_password_hash(new_password)
-
     db = current_app.mongo_db
     db.college_users.update_one({'email': current_user['email']}, {"$set": {'password': hashed_new_password}})
 
-    return jsonify({"message": "Password updated successfully"})
+    return jsonify({"message": "Password updated successfully"}), 200
