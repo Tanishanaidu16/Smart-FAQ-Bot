@@ -39,15 +39,15 @@
         <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
           <ng-container *ngIf="userRole === 'superAdmin'">
             <li class="nav-item">
-              <a class="nav-link" [routerLink]="['/admin/dashboard']" routerLinkActive="active">Dashboard</a>
+              <a class="nav-link" [routerLink]="['/admin/dashboard']" routerLinkActive="active" data-bs-dismiss="offcanvas">Dashboard</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" [routerLink]="['/admin/users']" routerLinkActive="active">College Users</a>
+              <a class="nav-link" [routerLink]="['/admin/users']" routerLinkActive="active" data-bs-dismiss="offcanvas">College Users</a>
             </li>
           </ng-container>
           <ng-container *ngIf="userRole === 'collegeUser'">
             <li class="nav-item">
-              <a class="nav-link" [routerLink]="['/admin/knowledge-management']" routerLinkActive="active">Knowledge Management</a>
+              <a class="nav-link" [routerLink]="['/admin/knowledge-management']" routerLinkActive="active" data-bs-dismiss="offcanvas">Knowledge Management</a>
             </li>
           </ng-container>
         </ul>
@@ -55,7 +55,7 @@
     </div>
   </div>
 </nav>
- 
+
 <!-- Offcanvas for User Profile -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="userOffcanvasRight" aria-labelledby="userOffcanvasRightLabel">
   <div class="offcanvas-header">
@@ -64,15 +64,15 @@
   </div>
   <div class="offcanvas-body">
     <ul class="offcanvas-menu">
-      <li><a [routerLink]="['/admin/core/profile']" routerLinkActive="active">Profile</a></li>
+      <li><a [routerLink]="['/admin/core/profile']" routerLinkActive="active" data-bs-dismiss="offcanvas">Profile</a></li>
       <ng-container *ngIf="userRole === 'collegeUser'">
-      <li><a [routerLink]="['/admin/change-password']" routerLinkActive="active">Change Password</a></li>
-    </ng-container>
-      <li><button class="btn btn-link" (click)="logout()">Logout</button></li>
+        <li><a [routerLink]="['/admin/change-password']" routerLinkActive="active" data-bs-dismiss="offcanvas">Change Password</a></li>
+      </ng-container>
+      <li><button class="btn btn-link" (click)="logout()" data-bs-dismiss="offcanvas">Logout</button></li>
     </ul>
   </div>
 </div>
- 
+
 <!-- Offcanvas for Settings -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="settingsOffcanvasRight" aria-labelledby="settingsOffcanvasLeftLabel">
   <div class="offcanvas-header">
@@ -81,10 +81,10 @@
   </div>
   <div class="offcanvas-body">
     <div>
-      <a class="dropdown-item" href="#">Download config files</a>
+      <a class="dropdown-item" href="#" data-bs-dismiss="offcanvas">Download config files</a>
     </div>
     <div>
-      <a class="dropdown-item" href="#">Multiple Chatbots</a>
+      <a class="dropdown-item" href="#" data-bs-dismiss="offcanvas">Multiple Chatbots</a>
     </div>
   </div>
 </div>

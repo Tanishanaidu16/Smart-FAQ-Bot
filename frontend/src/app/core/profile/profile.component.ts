@@ -3,12 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpService } from '../../service/http.service';
- 
+
 interface UserProfile {
   username: string;
   email: string;
 }
- 
+
 @Component({
   selector: 'app-profile',
   standalone: true,
@@ -22,13 +22,13 @@ export class ProfileComponent implements OnInit {
   editProfile: UserProfile = { username: '', email: '' };
   updateError = '';
   updateSuccess = '';
- 
+
   constructor(private router: Router, private http: HttpService) {}
- 
+
   ngOnInit(): void {
     this.loadProfile();
   }
- 
+
   loadProfile(): void {
     this.http.get<UserProfile>('api/profile').subscribe({
       next: (data) => {
@@ -45,30 +45,39 @@ export class ProfileComponent implements OnInit {
       }
     });
   }
- 
+
   enableEditMode(): void {
     this.isEditing = true;
     this.editProfile = { ...this.profile };
   }
- 
+
   disableEditMode(): void {
     this.isEditing = false;
     this.editProfile = { ...this.profile };
     this.updateError = '';
     this.updateSuccess = '';
   }
- 
+
   saveProfile(): void {
-    this.profile = { ...this.editProfile };
-    localStorage.setItem('userProfile', JSON.stringify(this.profile));
-    this.isEditing = false;
-    this.updateSuccess = 'Profile updated successfully!';
-    setTimeout(() => this.updateSuccess = '', 3000);
+    // Send updated profile to the backend
+    this.http.put('api/profile', this.editProfile).subscribe({
+      next: (response) => {
+        // Update the local profile and show success message
+        this.profile = { ...this.editProfile };
+        localStorage.setItem('userProfile', JSON.stringify(this.profile));
+        this.isEditing = false;
+        this.updateSuccess = 'Profile updated successfully!';
+        setTimeout(() => this.updateSuccess = '', 3000);
+      },
+      error: (err) => {
+        console.error('Failed to update profile:', err);
+        this.updateError = 'An error occurred while updating your profile.';
+      }
+    });
   }
- 
+
   logout(): void {
     localStorage.clear();
     this.router.navigate(['/login']);
   }
 }
- 
