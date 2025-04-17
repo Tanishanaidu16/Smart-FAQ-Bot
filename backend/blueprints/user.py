@@ -1,50 +1,80 @@
+import uuid
 from flask import Blueprint, jsonify, request, current_app
 from .middlewares import token_required
- 
+
 user_bp = Blueprint('user', __name__)
- 
-# Endpoint to retrieve the profile (GET)
+
+# GET: Retrieve profile with access key (if any)
 @user_bp.route('/profile', methods=['GET'])
 @token_required
 def profile(current_user):
+    superadmin_collection = current_app.mongo_db.superadmin
+    user_record = superadmin_collection.find_one({"email": current_user['email']})
+
+    if not user_record:
+        return jsonify({"message": "User not found"}), 404
+
+    access_key = user_record.get("access_key")
+    college_name = user_record.get("college_name", "")
+    college_website = user_record.get("college_website", "")
+
     return jsonify({
-        "message": f"Hello, {current_user.get('name', 'User')}!",
-        "email": current_user['email']
+        "username": current_user.get('name', 'User'),
+        "email": current_user['email'],
+        "access_key": access_key,
+        "college_name": college_name,
+        "college_website": college_website
     })
- 
-# Endpoint to update the profile (PUT)
+
+# PUT: Update profile
 @user_bp.route('/profile', methods=['PUT'])
 @token_required
 def update_profile(current_user):
-    # Get data from request
     data = request.get_json()
- 
-    # Validate the input data
+
     if not data.get('username') or not data.get('email'):
         return jsonify({"message": "Username and email are required"}), 400
- 
-    # Access the database using current_app to get the database connection
-    college_users_collection = current_app.mongo_db.college_users
- 
-    # Update user profile in the database
-    user = college_users_collection.find_one({"email": current_user['email']})
-    if not user:
-        return jsonify({"message": "User not found"}), 404
- 
-    updated_user = {
+
+    superadmin_collection = current_app.mongo_db.superadmin
+    update_fields = {
         "username": data['username'],
         "email": data['email']
     }
- 
-    college_users_collection.update_one(
+
+    if data.get('college_name'):
+        update_fields['college_name'] = data['college_name']
+    if data.get('college_website'):
+        update_fields['college_website'] = data['college_website']
+
+    superadmin_collection.update_one(
         {"email": current_user['email']},
-        {"$set": updated_user}
+        {"$set": update_fields},
+        upsert=True
     )
- 
-    # Return success response
+
     return jsonify({
         "message": "Profile updated successfully!",
-        "username": updated_user['username'],
-        "email": updated_user['email']
+        "username": data['username'],
+        "email": data['email'],
+        "college_name": data.get('college_name', ''),
+        "college_website": data.get('college_website', '')
     })
- 
+
+# POST: Generate Access Key (UUID)
+@user_bp.route('/generate-access-key', methods=['POST'])
+@token_required
+def generate_access_key(current_user):
+    superadmin_collection = current_app.mongo_db.superadmin
+
+    user_record = superadmin_collection.find_one({"email": current_user['email']})
+    if user_record and user_record.get("access_key"):
+        return jsonify({"message": "Access key already exists", "access_key": user_record["access_key"]}), 400
+
+    new_key = str(uuid.uuid4())
+    superadmin_collection.update_one(
+        {"email": current_user['email']},
+        {"$set": {"access_key": new_key}},
+        upsert=True
+    )
+
+    return jsonify({"message": "Access key generated successfully", "access_key": new_key})

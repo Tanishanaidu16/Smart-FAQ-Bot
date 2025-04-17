@@ -5,6 +5,12 @@
   <div *ngIf="!isEditing; else editSection">
     <p><strong>Username:</strong> {{ profile.username }}</p>
     <p><strong>Email:</strong> {{ profile.email }}</p>
+    <p *ngIf="profile.college_name"><strong>College Name:</strong> {{ profile.college_name }}</p>
+    <p *ngIf="profile.college_website">
+      <strong>College Website:</strong>
+      <a [href]="profile.college_website" target="_blank">{{ profile.college_website }}</a>
+    </p>
+    <p *ngIf="accessKey"><strong>Access Key:</strong> {{ accessKey }}</p>
     <button class="profile-button" (click)="enableEditMode()">Edit Profile</button>
   </div>
 
@@ -20,6 +26,20 @@
       <div>
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" [(ngModel)]="editProfile.email" required>
+      </div>
+      <div>
+        <label for="college_name">College Name:</label>
+        <input type="text" id="college_name" name="college_name" [(ngModel)]="editProfile.college_name">
+      </div>
+      <div>
+        <label for="college_website">College Website:</label>
+        <input type="url" id="college_website" name="college_website" [(ngModel)]="editProfile.college_website">
+      </div>
+      <div *ngIf="showGenerateKeyButton">
+        <button class="profile-button" type="button" (click)="generateAccessKey()">Generate Access Key</button>
+      </div>
+      <div *ngIf="accessKey">
+        <p><strong>Access Key:</strong> {{ accessKey }}</p>
       </div>
       <button class="profile-button" type="submit">Save Changes</button>
       <button class="profile-button" type="button" (click)="disableEditMode()">Cancel</button>
