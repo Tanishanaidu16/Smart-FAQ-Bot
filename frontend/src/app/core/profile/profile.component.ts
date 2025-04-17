@@ -68,7 +68,7 @@ export class ProfileComponent implements OnInit {
 
   saveProfile(): void {
     this.http.put('api/profile', this.editProfile).subscribe({
-      next: (response) => {
+      next: () => {
         this.profile = { ...this.editProfile };
         localStorage.setItem('userProfile', JSON.stringify(this.profile));
         this.isEditing = false;
@@ -91,6 +91,15 @@ export class ProfileComponent implements OnInit {
       error: (err) => {
         console.error('Failed to generate access key:', err);
       }
+    });
+  }
+
+  copyScriptTag(): void {
+    const scriptTag = `<script init_key="${this.accessKey}" src="http://localhost:5000/chatbot.js"></script>`;
+    navigator.clipboard.writeText(scriptTag).then(() => {
+      alert('Script copied to clipboard!');
+    }).catch(err => {
+      console.error('Could not copy script:', err);
     });
   }
 

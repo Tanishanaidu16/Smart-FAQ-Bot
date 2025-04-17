@@ -1,5 +1,4 @@
 <div class="profile-container">
-  <!-- Profile Heading only when not in Edit Mode -->
   <h1 *ngIf="!isEditing">Profile</h1>
 
   <div *ngIf="!isEditing; else editSection">
@@ -10,8 +9,21 @@
       <strong>College Website:</strong>
       <a [href]="profile.college_website" target="_blank">{{ profile.college_website }}</a>
     </p>
+
     <p *ngIf="accessKey"><strong>Access Key:</strong> {{ accessKey }}</p>
     <button class="profile-button" (click)="enableEditMode()">Edit Profile</button>
+
+    <!-- Chatbot Script Snippet Section -->
+    <div *ngIf="accessKey">
+      <p><strong>Embed this Chatbot:</strong></p>
+      <pre><code>&lt;script init_key="{{ accessKey }}" src="http://localhost:5000/chatbot.js"&gt;&lt;/script&gt;</code></pre>
+      <button class="profile-button" (click)="copyScriptTag()">Copy Script</button>
+    </div>
+
+    <!-- If access key is not generated -->
+    <div *ngIf="!accessKey">
+      <p><em>To embed the chatbot, generate an access key first.</em></p>
+    </div>
   </div>
 
   <ng-template #editSection>
@@ -35,12 +47,15 @@
         <label for="college_website">College Website:</label>
         <input type="url" id="college_website" name="college_website" [(ngModel)]="editProfile.college_website">
       </div>
+
       <div *ngIf="showGenerateKeyButton">
         <button class="profile-button" type="button" (click)="generateAccessKey()">Generate Access Key</button>
       </div>
+
       <div *ngIf="accessKey">
         <p><strong>Access Key:</strong> {{ accessKey }}</p>
       </div>
+
       <button class="profile-button" type="submit">Save Changes</button>
       <button class="profile-button" type="button" (click)="disableEditMode()">Cancel</button>
     </form>

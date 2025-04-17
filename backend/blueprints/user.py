@@ -8,8 +8,8 @@ user_bp = Blueprint('user', __name__)
 @user_bp.route('/profile', methods=['GET'])
 @token_required
 def profile(current_user):
-    superadmin_collection = current_app.mongo_db.superadmin
-    user_record = superadmin_collection.find_one({"email": current_user['email']})
+    college_users_collection = current_app.college_users
+    user_record = college_users_collection.find_one({"email": current_user['email']})
 
     if not user_record:
         return jsonify({"message": "User not found"}), 404
@@ -35,7 +35,7 @@ def update_profile(current_user):
     if not data.get('username') or not data.get('email'):
         return jsonify({"message": "Username and email are required"}), 400
 
-    superadmin_collection = current_app.mongo_db.superadmin
+    college_users_collection = current_app.college_users
     update_fields = {
         "username": data['username'],
         "email": data['email']
@@ -46,7 +46,7 @@ def update_profile(current_user):
     if data.get('college_website'):
         update_fields['college_website'] = data['college_website']
 
-    superadmin_collection.update_one(
+    college_users_collection.update_one(
         {"email": current_user['email']},
         {"$set": update_fields},
         upsert=True
@@ -64,14 +64,14 @@ def update_profile(current_user):
 @user_bp.route('/generate-access-key', methods=['POST'])
 @token_required
 def generate_access_key(current_user):
-    superadmin_collection = current_app.mongo_db.superadmin
+    college_users_collection = current_app.college_users
 
-    user_record = superadmin_collection.find_one({"email": current_user['email']})
+    user_record = college_users_collection.find_one({"email": current_user['email']})
     if user_record and user_record.get("access_key"):
         return jsonify({"message": "Access key already exists", "access_key": user_record["access_key"]}), 400
 
     new_key = str(uuid.uuid4())
-    superadmin_collection.update_one(
+    college_users_collection.update_one(
         {"email": current_user['email']},
         {"$set": {"access_key": new_key}},
         upsert=True

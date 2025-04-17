@@ -10,9 +10,11 @@ from blueprints.admin import admin_bp
 from blueprints.user import user_bp
 from blueprints.file_manager import file_bp
 from blueprints.change_password import change_password_bp
- 
+from blueprints.chatbot import chatbot_bp
+from flask import Flask, send_from_directory  # Add send_from_directory here
+
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../chatbot', static_url_path='')
  
 # CORS setup
 CORS(app, resources={r"/api/*": {"origins": "http://localhost:4200"}}, supports_credentials=True)
@@ -34,6 +36,7 @@ app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(file_bp, url_prefix='/api')
 app.register_blueprint(change_password_bp, url_prefix='/api')
 app.register_blueprint(rag_bp, url_prefix='/api')  # Register the RAG blueprint
+app.register_blueprint(chatbot_bp)
  
 @app.after_request
 def after_request(response):
@@ -57,6 +60,20 @@ def init_super_admin():
     else:
         print("[Init] Super admin already exists.")
  
+print("\n[DEBUG] Registered routes:")
+for rule in app.url_map.iter_rules():
+    print(f"{rule.endpoint} => {rule.rule}")
+
+# ✅ Serve the chatbot frontend HTML
+@app.route('/chatbot-view')
+def chatbot_index():
+    return send_from_directory(app.static_folder, 'index.html')
+
+# ✅ Serve chatbot.js separately
+@app.route('/chatbot.js')
+def chatbot_script():
+    return send_from_directory(app.static_folder, 'chatbot.js')
+
 # Run the app
 if __name__ == '__main__':
     init_super_admin()
