@@ -1,0 +1,6 @@
+# Ignore Python bytecode
+__pycache__/
+*.py[cod]
+
+# Ignore uploads (optional if you don't want to push uploaded files)
+backend/uploads/
