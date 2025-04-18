@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpService } from '../../service/http.service';
-
+import { Location } from '@angular/common';
 interface UserProfile {
   username: string;
   email: string;
@@ -26,8 +26,11 @@ export class ProfileComponent implements OnInit {
   updateSuccess = '';
   accessKey: string = '';
   showGenerateKeyButton: boolean = true;
-
-  constructor(private router: Router, private http: HttpService) {}
+  currentUrl = '';
+  constructor(private router: Router, private http: HttpService,private location: Location) {
+    this.currentUrl =  window.location.origin;
+    console.log('Current URL:', this.currentUrl);
+  }
 
   ngOnInit(): void {
     this.loadProfile();
@@ -95,7 +98,7 @@ export class ProfileComponent implements OnInit {
   }
 
   copyScriptTag(): void {
-    const scriptTag = `<script init_key="${this.accessKey}" src="http://localhost:5000/chatbot.js"></script>`;
+    const scriptTag = `<script init_key="${this.accessKey}" src="${this.currentUrl}/chatbot.js"></script>`;
     navigator.clipboard.writeText(scriptTag).then(() => {
       alert('Script copied to clipboard!');
     }).catch(err => {

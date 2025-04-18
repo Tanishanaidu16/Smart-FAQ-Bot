@@ -128,7 +128,52 @@ function showChatbot() {
 
     const loaderWrapper = document.createElement('div');
     loaderWrapper.className = 'bot-loader';
-    loaderWrapper.innerHTML = `<div style="font-size: 22px;">🤖</div> <span>...</span>`;
+    loaderWrapper.style = `
+      display: flex;
+      margin-bottom: 12px;
+      justify-content: flex-start;
+      align-items: center;
+    `;
+    loaderWrapper.innerHTML = `
+      <div style="font-size: 22px; margin-right: 8px;">🤖</div>
+      <span class="loader" style="
+        border-radius: 50%;
+        width: 1.8em;
+        height: 1.8em;
+        animation-fill-mode: both;
+        animation: bblFadInOut 1.8s infinite ease-in-out;
+        color: #007bff;
+        font-size: 6px;
+        position: relative;
+        text-indent: -9999em;
+        transform: translateZ(0);
+        animation-delay: -0.16s;
+      "></span>
+
+      <style>
+        @keyframes bblFadInOut {
+          0%, 80%, 100% { box-shadow: 0 1.8em 0 -1em }
+          40% { box-shadow: 0 1.8em 0 0 }
+        }
+        .loader::before, .loader::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          border-radius: 50%;
+          width: 1.8em;
+          height: 1.8em;
+          animation-fill-mode: both;
+          animation: bblFadInOut 1.8s infinite ease-in-out;
+        }
+        .loader::before {
+          left: -2.5em;
+          animation-delay: -0.32s;
+        }
+        .loader::after {
+          left: 2.5em;
+        }
+      </style>
+    `;
     chatMessages.appendChild(loaderWrapper);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 

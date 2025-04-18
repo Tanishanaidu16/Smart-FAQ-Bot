@@ -16,7 +16,7 @@
     <!-- Chatbot Script Snippet Section -->
     <div *ngIf="accessKey">
       <p><strong>Embed this Chatbot:</strong></p>
-      <pre><code>&lt;script init_key="{{ accessKey }}" src="http://localhost:5000/chatbot.js"&gt;&lt;/script&gt;</code></pre>
+      <pre><code>&lt;script init_key="{{ accessKey }}" src="{{currentUrl}}/chatbot.js"&gt;&lt;/script&gt;</code></pre>
       <button class="profile-button" (click)="copyScriptTag()">Copy Script</button>
     </div>
 
