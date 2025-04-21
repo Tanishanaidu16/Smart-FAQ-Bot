@@ -1,131 +1,104 @@
-from flask import Blueprint, request, jsonify
 import os
 import requests
-from bs4 import BeautifulSoup # type: ignore
-import google.generativeai as genai # type: ignore
-from sentence_transformers import SentenceTransformer # type: ignore
-import faiss # type: ignore
+from PyPDF2 import PdfReader
+from bs4 import BeautifulSoup
+from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
 import numpy as np
-import re
-from pypdf import PdfReader # type: ignore
- 
-# Initialize Blueprint
-rag_bp = Blueprint("rag_bp", __name__)
- 
-# Configure Gemini API
-genai.configure(api_key="AIzaSyCZ8CPoUeuQBp9rbahqfiMES2X37JHc7Fg")  # Replace with env variable in prod
-model = genai.GenerativeModel("gemini-1.5-flash")
- 
-# Util: Scrape Website
+from google.generativeai import GenerativeModel
+import google.generativeai as genai
+
+# Set your Gemini API Key
+genai.configure(api_key="AIzaSyAv2vEdJGNZadv86nHRJWfjD2Yt_JX_pmM")
+model = SentenceTransformer("all-MiniLM-L6-v2")
+gemini = GenerativeModel("gemini-1.5-flash")
+
+# --- Existing Functions ---
+
 def scrape_website(url):
     try:
         response = requests.get(url)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
-        elements = soup.find_all(['p', 'div', 'span', 'article'])
-        return ' '.join([el.get_text(strip=True) for el in elements])
+        soup = BeautifulSoup(response.text, "html.parser")
+        return soup.get_text()
     except Exception as e:
-        print(f"[Error] Website scrape failed: {e}")
         return ""
- 
-# Util: Load PDF
+
 def load_pdf(file_path):
     try:
         reader = PdfReader(file_path)
-        return "\n".join(page.extract_text() for page in reader.pages if page.extract_text())
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text()
+        return text
     except Exception as e:
-        print(f"[Error] PDF read failed: {e}")
         return ""
- 
-# Util: Split Text into Chunks
-def split_text(text, chunk_size=500):
-    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', text)
-    chunks, current = [], ""
-    for sentence in sentences:
-        if len(current) + len(sentence) + (1 if current else 0) <= chunk_size:
-            current += (" " + sentence if current else sentence)
-        else:
-            if current:
-                chunks.append(current.strip())
-            current = sentence
-    if current:
-        chunks.append(current.strip())
-    return [chunk for chunk in chunks if chunk]
- 
-# Embedding
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
-def generate_vector(text):
-    return embedding_model.encode([text])[0].astype('float32')
- 
-# Build FAISS index
+
+def split_text(text, chunk_size=500, overlap=50):
+    words = text.split()
+    chunks = []
+    for i in range(0, len(words), chunk_size - overlap):
+        chunk = " ".join(words[i:i + chunk_size])
+        chunks.append(chunk)
+    return chunks
+
 def create_index(chunks):
-    vectors = [generate_vector(chunk) for chunk in chunks]
-    if not vectors:
-        return None, []
-    index = faiss.IndexFlatL2(len(vectors[0]))
-    index.add(np.array(vectors))
-    return index, chunks
- 
-# Query index
-def query_index(index, query, top_k=5):
-    query_vec = generate_vector(query)
-    distances, indices = index.search(np.array([query_vec]), top_k)
-    return indices[0]
- 
-# Gemini Response
+    embeddings = model.encode(chunks)
+    return embeddings, chunks
+
+def query_index(embeddings, query, top_k=3):
+    query_embedding = model.encode([query])
+    similarities = cosine_similarity(query_embedding, embeddings)[0]
+    top_indices = np.argsort(similarities)[-top_k:][::-1]
+    return top_indices
+
 def query_gemini_rag(query, context):
-    prompt = f"Answer the question based on the provided context:\n\nContext:\n{context}\n\nQuestion: {query}"
     try:
-        response = model.generate_content(prompt)
+        prompt = f"""
+        Based on the following content, answer the user's question in a helpful and clear way:
+
+        --- Content Start ---
+        {context}
+        --- Content End ---
+
+        User's Question: {query}
+        """
+
+        response = gemini.generate_content(prompt)
         return response.text.strip()
-    except Exception as e:
-        return f"Error generating answer: {e}"
- 
-# ✅ API Endpoint
-@rag_bp.route('/chat', methods=['POST'])
-def rag_chat_endpoint():
+    except Exception:
+        return "Error generating answer"
+
+# --- ✅ NEW FUNCTION TO BE USED BY chatbot.py ---
+
+def generate_response_from_rag(user_query: str) -> str:
     try:
-        data = request.get_json()
- 
-        prompt = data.get("prompt")
-        website_urls = data.get("website_urls", [])
-        pdf_paths = data.get("pdf_paths", [])
- 
-        if not prompt:
-            return jsonify({"error": "Missing 'prompt' in request body"}), 400
- 
-        # Collect and chunk all content
+        # 🔒 Hardcoded sources
+        website_urls = ["https://www.sahyadri.edu.in/"]
+        pdf_paths = [
+            r"C:\Users\sameer.kavale\Downloads\Files\Artificial Intelligence 1.pdf",
+            r"C:\Users\sameer.kavale\Downloads\Files\Big Data Analytics 1.pdf"
+        ]
+
         all_chunks = []
- 
+
         for url in website_urls:
-            if url:
-                print(f"Scraping {url}")
-                text = scrape_website(url)
-                all_chunks.extend(split_text(text))
- 
+            text = scrape_website(url)
+            all_chunks.extend(split_text(text))
+
         for path in pdf_paths:
             if os.path.exists(path):
-                print(f"Reading {path}")
                 text = load_pdf(path)
                 all_chunks.extend(split_text(text))
-            else:
-                print(f"[Warning] PDF not found: {path}")
- 
+
         if not all_chunks:
-            return jsonify({"error": "No valid content found from provided sources"}), 400
- 
+            return "Sorry, I couldn’t find any useful content to answer that. 📄❌"
+
         index, chunk_data = create_index(all_chunks)
-        top_indices = query_index(index, prompt)
+        top_indices = query_index(index, user_query)
         top_chunks = [chunk_data[i] for i in top_indices]
         context = "\n".join(top_chunks)
- 
-        # Get Gemini response
-        answer = query_gemini_rag(prompt, context)
- 
-        return jsonify({
-            "response": answer,
-            "top_chunks_used": top_chunks  # Optional: useful for debug
-        })
- 
-    except Exception as e:
-        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+
+        return query_gemini_rag(user_query, context)
+
+    except Exception:
+        return "Error generating answer"

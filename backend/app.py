@@ -4,7 +4,6 @@ import os
 import datetime
 from werkzeug.security import generate_password_hash
 from database_connection import db, college_users_collection, super_admins_collection
-from notebook.college_ragv1 import rag_bp  # Import the RAG blueprint
 from blueprints.auth import auth_bp
 from blueprints.admin import admin_bp
 from blueprints.user import user_bp
@@ -35,7 +34,6 @@ app.register_blueprint(admin_bp, url_prefix='/api/college-users')
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(file_bp, url_prefix='/api')
 app.register_blueprint(change_password_bp, url_prefix='/api')
-app.register_blueprint(rag_bp, url_prefix='/api')  # Register the RAG blueprint
 app.register_blueprint(chatbot_bp)
  
 @app.after_request

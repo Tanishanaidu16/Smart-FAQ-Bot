@@ -1,4 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
+from notebook.college_ragv1 import generate_response_from_rag
+
 
 chatbot_bp = Blueprint('chatbot', __name__, url_prefix='/api/chatbot')
 
@@ -22,19 +24,23 @@ def check_init_key():
 def greeting():
     return jsonify({ "bot": "Hello! How are you today? 👋" })
 
-# Chat message route
+# Updated Chat message route using Gemini RAG
 @chatbot_bp.route('/message', methods=['POST'])
 def message():
-    import random, time
-    data = request.get_json()
-    user_message = data.get("message", "")
-    time.sleep(1.5)
-    reply = random.choice([
-        "I'm just a friendly bot, how can I assist? 😊",
-        "That’s interesting! Tell me more.",
-        "I'm still learning, but I’ll try my best!",
-        "Hmm... I don't know how to respond to that. 🤖",
-        "Let's try a different question. 🙃",
-        "Oops! I didn’t get that. 😅"
-    ])
-    return jsonify({ "reply": reply })
+    try:
+        data = request.get_json()
+        user_message = data.get("message", "")
+
+        if not user_message:
+            return jsonify({ "reply": "Please enter a valid message." })
+
+        # ✅ Call the function from college_ragv1.py
+        response = generate_response_from_rag(user_message)
+        print("Calling RAG system with:", user_message)
+        if not response.strip() or "Error generating answer" in response:
+            return jsonify({ "reply": "Sorry, I couldn’t find an answer for that. Try asking something else!" })
+
+        return jsonify({ "reply": response })
+
+    except Exception as e:
+        return jsonify({ "reply": "Oops, something went wrong on our end. Please try again later. ⚠️" }), 500
