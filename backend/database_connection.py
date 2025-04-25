@@ -8,4 +8,6 @@ db = client.get_database()
 # Export collections
 college_users_collection = db['college_users']
 super_admins_collection = db['super_admins']
-pdf_files_collection = db['pdf_files']
+KM_documents_collection = db['KM_documents']
+KM_URLs_collection = db['KM_URLs']
+ 

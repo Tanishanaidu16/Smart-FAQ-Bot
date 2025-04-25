@@ -1,5 +1,5 @@
 .container {
-  max-width: 600px;
+  max-width: 700px;
   margin: auto;
   background-color: #f9f9f9;
   padding: 30px;
@@ -12,16 +12,26 @@ h3, h5 {
   margin-bottom: 20px;
 }
  
-input[type="file"] {
+input[type="file"],
+input[type="text"],
+textarea {
   padding: 10px;
   background-color: #fff;
   border: 1px solid #ced4da;
   border-radius: 6px;
   width: 100%;
+  box-sizing: border-box;
 }
  
-button.btn-primary {
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+ 
+button.btn-primary,
+button.btn-success {
   width: 100%;
+  margin-top: 10px;
 }
  
 .list-group-item {
@@ -39,3 +49,15 @@ button.btn-primary {
 .btn-sm i {
   margin-right: 5px;
 }
+ 
+/* ✅ Bootstrap tab override (optional) */
+.nav-tabs .nav-link.active {
+  background-color: #e9ecef;
+  border-color: #dee2e6 #dee2e6 #fff;
+  font-weight: bold;
+}
+ 
+.nav-tabs .nav-link {
+  cursor: pointer;
+}
+ 

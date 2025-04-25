@@ -1,22 +1,64 @@
 <div class="container mt-4">
-  <h3>📄 Upload PDF</h3>
-  <form (submit)="uploadPdf($event)">
-    <div class="mb-3">
-      <input type="file" name="file" (change)="onFileChange($event)" accept="application/pdf" required>
-    </div>
-    <button type="submit" class="btn btn-primary">Upload</button>
-  </form>
- 
-  <hr>
- 
-  <h5>🗂️ Your Uploaded PDFs</h5>
-  <ul class="list-group mt-3">
-    <li *ngFor="let file of files" class="list-group-item d-flex justify-content-between">
-      {{ file.filename }}
-      <button class="btn btn-danger btn-sm" (click)="deletePdf(file.id)">
-        <i class="bi bi-trash"></i> Delete
-      </button>
-     
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'pdf'" (click)="setTab('pdf')">📄 Documents</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'url'" (click)="setTab('url')">🌐 Website URLs</a>
     </li>
   </ul>
+ 
+  <!-- PDF Upload Section -->
+  <div *ngIf="activeTab === 'pdf'" class="tab-content mt-4">
+    <h3>📄 Upload PDF</h3>
+    <form (submit)="uploadPdf($event)">
+      <div class="mb-3">
+        <input type="file" name="file" (change)="onFileChange($event)" accept="application/pdf" required>
+      </div>
+      <div class="mb-3">
+        <textarea [(ngModel)]="pdfDescription" name="description" class="form-control" placeholder="Enter description" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+ 
+    <hr>
+    <h5>🗂️ Your Uploaded PDFs</h5>
+    <ul class="list-group mt-3">
+      <li *ngFor="let file of files" class="list-group-item d-flex justify-content-between">
+        <div>
+          <strong>{{ file.filename }}</strong><br>
+          <small>{{ file.description }}</small>
+        </div>
+        <button class="btn btn-danger btn-sm" (click)="deletePdf(file.id)">
+          <i class="bi bi-trash"></i> Delete
+        </button>
+      </li>
+    </ul>
+  </div>
+ 
+  <!-- URL Section -->
+  <div *ngIf="activeTab === 'url'" class="tab-content mt-4">
+    <h3>🌐 Add URL</h3>
+    <div class="mb-3">
+      <input [(ngModel)]="url" name="url" type="text" class="form-control" placeholder="Enter website URL">
+    </div>
+    <div class="mb-3">
+      <textarea [(ngModel)]="urlDescription" name="urlDescription" class="form-control" placeholder="Enter description"></textarea>
+    </div>
+    <button class="btn btn-success" (click)="addUrl()">Add URL</button>
+ 
+    <hr>
+    <h5>🔗 Saved URLs</h5>
+    <ul class="list-group mt-3">
+      <li *ngFor="let url of urls" class="list-group-item d-flex justify-content-between">
+        <div>
+          <strong>{{ url.url }}</strong><br>
+          <small>{{ url.description }}</small>
+        </div>
+        <button class="btn btn-danger btn-sm" (click)="deleteUrl(url.id)">
+          <i class="bi bi-trash"></i> Delete
+        </button>
+      </li>
+    </ul>
+  </div>
 </div>
