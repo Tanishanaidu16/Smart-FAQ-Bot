@@ -206,7 +206,9 @@ function showChatbot() {
       }
  
       const data = await response.json();
-      addMessage(data?.reply?.replaceAll('```html','') || '', 'bot');
+      let reply = data?.reply?.replaceAll('```html','') || '';
+      reply+="<br> <strong>("+data.source+")</strong>";
+      addMessage(reply, 'bot');
     } catch (err) {
       loaderWrapper.remove();
       console.error(err);

@@ -131,9 +131,9 @@ def generate_response_from_rag(query: str) -> str:
     try:
         source = classify_data_source.invoke(query)
         if source == "pdf":
-            return query_pdfs.invoke({"query": query, "loaded_pdfs": loaded_pdfs})
+            return query_pdfs.invoke({"query": query, "loaded_pdfs": loaded_pdfs}),source
         else:
-            return query_websites.invoke({"query": query, "loaded_websites": loaded_websites})
+            return query_websites.invoke({"query": query, "loaded_websites": loaded_websites}),source
     except Exception as e:
         print(f"[ERROR] generate_response_from_rag failed: {e}")
         return "Error generating answer. Please try again."

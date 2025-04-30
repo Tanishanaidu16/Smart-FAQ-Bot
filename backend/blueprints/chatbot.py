@@ -35,12 +35,12 @@ def message():
             return jsonify({ "reply": "Please enter a valid message." })
 
         # ✅ Call the function from college_ragv1.py
-        response = generate_response_from_rag(user_message)
+        response,source = generate_response_from_rag(user_message)
         print("Calling RAG system with:", user_message)
         if not response.strip() or "Error generating answer" in response:
             return jsonify({ "reply": "Sorry, I couldn’t find an answer for that. Try asking something else!" })
 
-        return jsonify({ "reply": response })
+        return jsonify({ "reply": response,'source': source })
 
     except Exception as e:
         return jsonify({ "reply": "Oops, something went wrong on our end. Please try again later. ⚠️" }), 500

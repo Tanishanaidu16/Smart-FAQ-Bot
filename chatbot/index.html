@@ -1,14 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
-</head>
+  <meta charset="UTF-8">
+  <title>Simple College Website</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+    }
 
+    header {
+      background-color: #003366;
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+    }
+
+    nav {
+      background-color: #0059b3;
+      padding: 10px 0;
+      text-align: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      font-weight: bold;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    .hero {
+      background-color: #e6f0ff;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      margin-bottom: 10px;
+      color: #003366;
+    }
+
+    .section {
+      padding: 40px 20px;
+      background: white;
+      margin: 20px auto;
+      max-width: 800px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    footer {
+      background-color: #003366;
+      color: white;
+      text-align: center;
+      padding: 15px 0;
+      margin-top: 40px;
+    }
+  </style>
+</head>
 <body>
-  <h1>dummby college Website</h1>
+
+  <header>
+    <h1>Bright Future College</h1>
+    <p>Empowering Students for a Better Tomorrow</p>
+  </header>
+
+  <nav>
+    <a href="#about">About</a>
+    <a href="#courses">Courses</a>
+    <a href="#contact">Contact</a>
+  </nav>
+
+  <div class="hero">
+    <h1>Welcome to Bright Future College</h1>
+    <p>Explore knowledge, build your career, and make a difference</p>
+  </div>
+
+  <div class="section" id="about">
+    <h2>About Us</h2>
+    <p>Bright Future College is committed to providing quality education to students from diverse backgrounds. Our goal is to nurture talents and prepare students for future challenges in a competitive world.</p>
+  </div>
+
+  <div class="section" id="courses">
+    <h2>Our Courses</h2>
+    <ul>
+      <li>Bachelor of Science in Computer Science</li>
+      <li>Bachelor of Arts in Economics</li>
+      <li>Bachelor of Business Administration</li>
+      <li>Diploma in Web Development</li>
+    </ul>
+  </div>
+
+  <div class="section" id="contact">
+    <h2>Contact Us</h2>
+    <p>Email: info@brightfuturecollege.edu</p>
+    <p>Phone: +1 234 567 890</p>
+    <p>Address: 123 College Ave, Knowledge City, USA</p>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Bright Future College. All rights reserved.</p>
+  </footer>
   <script init_key="9c12c058-b434-4ab5-9c07-9b2cf6e94f7d" src="http://localhost:4200/chatbot.js"></script>
 </body>
 </html>
