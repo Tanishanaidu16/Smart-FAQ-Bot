@@ -4,6 +4,7 @@ import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpService } from '../../service/http.service';
 import { Location } from '@angular/common';
+
 interface UserProfile {
   username: string;
   email: string;
@@ -26,13 +27,17 @@ export class ProfileComponent implements OnInit {
   updateSuccess = '';
   accessKey: string = '';
   showGenerateKeyButton: boolean = true;
+  userRole: string | null = ''; // Variable to hold the role
   currentUrl = '';
-  constructor(private router: Router, private http: HttpService,private location: Location) {
-    this.currentUrl =  window.location.origin;
-    console.log('Current URL:', this.currentUrl);
+
+  constructor(private router: Router, private http: HttpService, private location: Location) {
+    this.currentUrl = window.location.origin;
   }
 
   ngOnInit(): void {
+    // Get user role from localStorage
+    this.userRole = localStorage.getItem('role');
+    console.log('User Role:', this.userRole);
     this.loadProfile();
   }
 
@@ -45,9 +50,11 @@ export class ProfileComponent implements OnInit {
           college_name: data.college_name || '',
           college_website: data.college_website || ''
         };
-        this.editProfile = { ...this.profile };
+
         this.accessKey = data.access_key || '';
         this.showGenerateKeyButton = !this.accessKey;
+
+        this.editProfile = { ...this.profile };
         localStorage.setItem('userProfile', JSON.stringify(this.profile));
       },
       error: (err) => {

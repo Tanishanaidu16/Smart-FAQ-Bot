@@ -79,7 +79,7 @@ function showChatbot() {
   function addMessage(text, sender) {
     const wrapper = document.createElement('div');
     wrapper.style = `
-      
+     
       width: 100%;
       margin-bottom: 12px;
       justify-content: ${sender === 'user' ? 'flex-end' : 'flex-start'};
@@ -207,7 +207,7 @@ function showChatbot() {
  
       const data = await response.json();
       let reply = data?.reply?.replaceAll('```html','') || '';
-      reply+="<br> <strong>("+data.source+")</strong>";
+      //reply+="<br> <strong>("+data.source+")</strong>";
       addMessage(reply, 'bot');
     } catch (err) {
       loaderWrapper.remove();

@@ -1,25 +1,34 @@
 <div class="profile-container">
   <h1 *ngIf="!isEditing">Profile</h1>
- 
+
   <div *ngIf="!isEditing; else editSection">
     <p><strong>Username:</strong> {{ profile.username }}</p>
     <p><strong>Email:</strong> {{ profile.email }}</p>
-    <p *ngIf="profile.college_name"><strong>College Name:</strong> {{ profile.college_name }}</p>
-    <p *ngIf="accessKey"><strong>Access Key:</strong> {{ accessKey }}</p>
- 
-    <button class="profile-button" (click)="enableEditMode()">Edit Profile</button>
- 
-    <div *ngIf="accessKey">
-      <p><strong>Embed this Chatbot:</strong></p>
-      <pre><code>&lt;script init_key="{{ accessKey }}" src="{{currentUrl}}/chatbot.js"&gt;&lt;/script&gt;</code></pre>
-      <button class="profile-button" (click)="copyScriptTag()">Copy Script</button>
-    </div>
- 
-    <div *ngIf="!accessKey">
-      <p><em>To embed the chatbot, generate an access key first.</em></p>
-    </div>
+
+    <!-- Only show the rest if the user is a collegeUser -->
+    <ng-container *ngIf="userRole === 'collegeUser'">
+      <p *ngIf="profile.college_name"><strong>College Name:</strong> {{ profile.college_name }}</p>
+      <p *ngIf="accessKey"><strong>Access Key:</strong> {{ accessKey }}</p>
+
+      <button class="profile-button" (click)="enableEditMode()">Edit Profile</button>
+      
+      <div *ngIf="accessKey">
+        <p><strong>Embed this Chatbot:</strong></p>
+        <pre><code>&lt;script init_key="{{ accessKey }}" src="{{currentUrl}}/chatbot.js"&gt;&lt;/script&gt;</code></pre>
+        <button class="profile-button" (click)="copyScriptTag()">Copy Script</button>
+      </div>
+
+      <div *ngIf="!accessKey">
+        <p><em>To embed the chatbot, generate an access key first.</em></p>
+      </div>
+    </ng-container>
+
+    <!-- Only show if the user is a superAdmin -->
+    <ng-container *ngIf="userRole === 'superAdmin'">
+      <p><strong>Role: Super Admin</strong></p>
+    </ng-container>
   </div>
- 
+
   <ng-template #editSection>
     <h2>Edit Profile</h2>
     <div *ngIf="updateError" class="error-message">{{ updateError }}</div>
@@ -33,22 +42,22 @@
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" [(ngModel)]="editProfile.email" required>
       </div>
-      <div>
+
+      <div *ngIf="userRole === 'collegeUser'">
         <label for="college_name">College Name:</label>
         <input type="text" id="college_name" name="college_name" [(ngModel)]="editProfile.college_name">
       </div>
- 
-      <div *ngIf="showGenerateKeyButton">
+
+      <div *ngIf="userRole === 'collegeUser' && showGenerateKeyButton">
         <button class="profile-button" type="button" (click)="generateAccessKey()">Generate Access Key</button>
       </div>
- 
-      <div *ngIf="accessKey">
+
+      <div *ngIf="userRole === 'collegeUser' && accessKey">
         <p><strong>Access Key:</strong> {{ accessKey }}</p>
       </div>
- 
+
       <button class="profile-button" type="submit">Save Changes</button>
       <button class="profile-button" type="button" (click)="disableEditMode()">Cancel</button>
     </form>
   </ng-template>
 </div>
- 

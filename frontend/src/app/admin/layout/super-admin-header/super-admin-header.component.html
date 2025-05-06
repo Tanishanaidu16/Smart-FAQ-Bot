@@ -5,18 +5,22 @@
     </button>
     <a class="navbar-brand" href="#">SMART FAQ BOT</a>
     <div class="d-flex align-items-center">
-      <div class="settings-actions me-2">
-        <button
-          class="btn btn-outline-secondary settings-icon-button"
-          type="button"
-          data-bs-toggle="offcanvas"
-          data-bs-target="#settingsOffcanvasRight"
-          aria-controls="settingsOffcanvasRight"
-        >
-          <i class="bi bi-gear-fill"></i>
-          <span class="visually-hidden">Settings</span>
-        </button>
-      </div>
+      <!-- Settings button shown only for collegeUser -->
+      <ng-container *ngIf="userRole === 'collegeUser'">
+        <div class="settings-actions me-2">
+          <button
+            class="btn btn-outline-secondary settings-icon-button"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#settingsOffcanvasRight"
+            aria-controls="settingsOffcanvasRight"
+          >
+            <i class="bi bi-gear-fill"></i>
+            <span class="visually-hidden">Settings</span>
+          </button>
+        </div>
+      </ng-container>
+
       <div class="user-actions me-2">
         <button
           class="btn btn-outline-secondary user-icon"
@@ -29,6 +33,7 @@
         </button>
       </div>
     </div>
+
     <!-- Offcanvas Menu (Now on the Left) -->
     <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
       <div class="offcanvas-header">
@@ -73,18 +78,15 @@
   </div>
 </div>
 
-<!-- Offcanvas for Settings -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="settingsOffcanvasRight" aria-labelledby="settingsOffcanvasLeftLabel">
-  <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="settingsOffcanvasLeftLabel">Settings</h5>
-    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
-  <div class="offcanvas-body">
-    <div>
-      <a class="dropdown-item" href="#" data-bs-dismiss="offcanvas">Download config files</a>
+<!-- Offcanvas for Settings shown only for collegeUser -->
+<ng-container *ngIf="userRole === 'collegeUser'">
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="settingsOffcanvasRight" aria-labelledby="settingsOffcanvasLeftLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="settingsOffcanvasLeftLabel">Settings</h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
-    <div>
-      <a class="dropdown-item" href="#" data-bs-dismiss="offcanvas">Multiple Chatbots</a>
+    <div class="offcanvas-body">
+      <a class="dropdown-item" href="#" (click)="downloadConfig()" data-bs-dismiss="offcanvas">Download Config Files</a>
     </div>
   </div>
-</div>
+</ng-container>

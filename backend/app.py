@@ -58,10 +58,6 @@ def init_super_admin():
     else:
         print("[Init] Super admin already exists.")
  
-print("\n[DEBUG] Registered routes:")
-for rule in app.url_map.iter_rules():
-    print(f"{rule.endpoint} => {rule.rule}")
-
 # ✅ Serve the chatbot frontend HTML
 @app.route('/chatbot-view')
 def chatbot_index():
