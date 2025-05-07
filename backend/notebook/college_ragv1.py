@@ -11,9 +11,18 @@ from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from typing import Tuple
+from dotenv import load_dotenv
 # -- API Key and Config --
-os.environ["GOOGLE_API_KEY"] = "AIzaSyAv2vEdJGNZadv86nHRJWfjD2Yt_JX_pmM"
-genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+# Load API key from .env
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+# Check if the key is loaded (optional debug)
+if not GOOGLE_API_KEY:
+    raise ValueError("Missing GOOGLE_API_KEY in .env file")
+
+# Configure Gemini
+os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
+genai.configure(api_key=GOOGLE_API_KEY)
  
 SYSTEM_INSTRUCTION = """
 You are a helpful college assistant.
@@ -22,16 +31,17 @@ Your job is to always answer using the tools provided. Do NOT answer using your 
 Follow these steps strictly and do not skip any step:
 
 1. Decide whether to use PDFs or websites based on keywords in the query:
-   - Use "pdf" if the query includes words like: syllabus, notes, pdf, exam, module, assignments, lecture, textbook, curriculum, study material, slides, topics, questions, model papers, handouts, lab manual, reference books, tutorials, schedule, lesson plan.
-   - Use "web" if the query includes words like: admission, fee, college, placements, faculty, campus, contact, website, infrastructure, hostel, ranking, location, how to apply, cutoff, eligibility, departments, director, principal, events, fest, clubs, canteen, sports, transport, bus schedule, holiday list.
+   - Use "pdf" if the query includes words like: syllabus, notes, pdf, exam, module, assignments, lecture, textbook, curriculum, study material, slides, topics, questions, model papers, handouts, lab manual, reference books, tutorials, schedule, lesson plan, important questions, repeated questions, key topics, previous semester exam, 12-mark questions, question distribution, question papers.
+   - Use "web" if the query includes words like: admission, fee, college, placements, faculty, campus, contact, website, infrastructure, hostel, ranking, location, how to apply, cutoff, eligibility, departments, director, principal, events, fest, clubs, canteen, sports, transport, bus schedule, holiday list, placement packages, salary package, fee structure, faculty, student reviews, campus life.
 
 2. If the query is classified as "pdf":
-   - Call `load_pdfs_from_mongo`
-   - Then call `query_pdfs` with the user query
+   - Call load_pdfs_from_mongo
+   - Then call query_pdfs with the user query.
 
 3. If the query is classified as "web":
-   - Call `load_websites_from_mongo`
-   - Then call `query_websites` with the user query
+   - Call load_websites_from_mongo
+   - Then call query_websites with the user query
+   - Search for college-related terms such as "admission process", "highest salary package", "fee structure", and details of colleges like `Sahyadri College of Engineering`.
 
 4. Always return the final answer in HTML using only these tags: <p>, <ul>, and <li>. Do not use any other tags or styling.
 
@@ -45,11 +55,18 @@ Important:
 """
 
 
+
 BASE_DIR = Path(os.getcwd()).resolve()
  
-# -- MongoDB --
-mongo_client = MongoClient("mongodb://localhost:27017")
-db = mongo_client["chatbot_platform"]
+# Load .env file
+load_dotenv()
+
+# Get Mongo URI from environment
+MONGO_URI = os.getenv("MONGO_URI")
+
+# Connect to MongoDB Atlas
+mongo_client = MongoClient(MONGO_URI)
+db = mongo_client.get_default_database()
 KM_documents_collection = db["KM_documents"]
 KM_URLs_collection = db["KM_URLs"]
  

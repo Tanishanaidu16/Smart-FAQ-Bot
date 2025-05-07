@@ -4,3 +4,5 @@ __pycache__/
 
 # Ignore uploads (optional if you don't want to push uploaded files)
 backend/uploads/
+
+.env
