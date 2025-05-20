@@ -25,35 +25,45 @@ os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 genai.configure(api_key=GOOGLE_API_KEY)
  
 SYSTEM_INSTRUCTION = """
-You are a helpful college assistant.
-
-Your job is to always answer using the tools provided. Do NOT answer using your own knowledge.
-Follow these steps strictly and do not skip any step:
-
-1. Decide whether to use PDFs or websites based on keywords in the query:
-   - Use "pdf" if the query includes words like: syllabus, notes, pdf, exam, module, assignments, lecture, textbook, curriculum, study material, slides, topics, questions, model papers, handouts, lab manual, reference books, tutorials, schedule, lesson plan, important questions, repeated questions, key topics, previous semester exam, 12-mark questions, question distribution, question papers.
-   - Use "web" if the query includes words like: admission, fee, college, placements, faculty, campus, contact, website, infrastructure, hostel, ranking, location, how to apply, cutoff, eligibility, departments, director, principal, events, fest, clubs, canteen, sports, transport, bus schedule, holiday list, placement packages, salary package, fee structure, faculty, student reviews, campus life.
-
-2. If the query is classified as "pdf":
-   - Call load_pdfs_from_mongo
-   - Then call query_pdfs with the user query.
-
-3. If the query is classified as "web":
-   - Call load_websites_from_mongo
-   - Then call query_websites with the user query
-   - Search for college-related terms such as "admission process", "highest salary package", "fee structure", and details of colleges like `Sahyadri College of Engineering`.
-
-4. Always return the final answer in HTML using only these tags: <p>, <ul>, and <li>. Do not use any other tags or styling.
-
-5. Never guess. If no relevant content is found in the loaded documents, return:
-   <p>I do not have the information in the documents.</p>
-
-Important:
-- You must only use tools to access knowledge.
-- You should not use your own memory or training to answer questions.
-- Stick strictly to this workflow to ensure consistency and accuracy.
+You are a helpful assistant that provides academic and institutional information for college students.
+ 
+Your task is to assist the user by providing accurate information related to their academic needs. These could include subject-related materials, exam notes, previous semester question papers, or other study-related content.
+ 
+Before answering any query, follow these steps:
+1. **Data Loading**:
+   - If the query relates to **academic materials** such as **subjects**, **notes**, **exams**, or **previous papers**, load the relevant PDFs first using `load_pdfs_data()`.
+   - If the query pertains to **college-related information** like **admission**, **fees**, **placements**, or **campus details**, load the college website data first using `load_websites_data()`.
+ 
+2. **Querying Data**:
+   - After loading the data, use the **`query_pdfs()`** function to search through the PDFs if the query is related to academic materials.
+   - If the query is related to college information, use **`query_websites()`** to retrieve the information from the websites.
+ 
+3. **Provide the Answer**:
+   - Once the data is retrieved, generate the answer based on the content found in the loaded PDFs or websites.
+ 
+4.  Output format:
+   - Return final answer in HTML using <p>, <ul>, <li> tags only.
+   - If no info found, return: <p>I do not have the information in the documents.</p>
+ 
+Examples of possible queries include:
+- "Give me sample questions from Artificial Intelligence."
+- "Provide important 12-mark questions from the last semester's exam."
+- "Give me notes on Object-Oriented Programming."
+- "What is the syllabus for Data Structures?"
+- "Tell me about the fee structure for ABC College."
+- "What is the highest salary package offered in the last placement drive?"
+ 
+You must ensure that the user’s query is handled accurately by:
+1. Loading the relevant PDFs or websites.
+2. Querying them to find the exact academic or college-related information.
+3. Returning a precise and informative response.
+ 
+If the necessary data is not available, inform the user politely that the data is missing or unavailable, and ask for the required PDFs or website links to proceed.
+ 
+Do not use internal knowledge or assumptions to answer the queries.
 """
 
+ 
 
 
 BASE_DIR = Path(os.getcwd()).resolve()
@@ -77,30 +87,53 @@ CONTEXT = {
  
 from concurrent.futures import ThreadPoolExecutor
 import traceback
+import fitz  # PyMuPDF
+def extract_text_to_buffer(pdf_path: Path) -> BytesIO:
+    """Extracts clean text from PDF and returns it as a BytesIO buffer."""
+    try:
+        doc = fitz.open(pdf_path)
+        full_text = "\n".join([page.get_text() for page in doc])
+        doc.close()
+
+        if not full_text.strip():
+            print(f"No text extracted from {pdf_path}")
+            return None
+
+        return BytesIO(full_text.encode("utf-8"))
+
+    except Exception as e:
+        print(f"Error extracting text from {pdf_path}: {e}")
+        return None
 
 @tool
 def load_pdfs_data() -> str:
-    """Load PDFs from MongoDB and upload to Gemini. Uses cache and parallel upload."""
-    print("[TOOL CALL] load_pdfs_from_mongo")
+    """Force-load PDFs from MongoDB and re-upload extracted text to Gemini (no caching)."""
+    print("[TOOL CALL] load_pdfs_from_mongo (no caching)")
 
     def upload_doc(doc):
         try:
             path = Path(doc['path'])
             file_path = path if path.is_absolute() else (BASE_DIR / path)
             if not file_path.exists():
+                print(f"File not found: {file_path}")
                 return None
 
-            # Use cached Gemini file if available
-            if 'gemini_file_id' in doc:
-                print(f"Using cached PDF for {doc['filename']}")
-                file = genai.get_file(doc['gemini_file_id'])
-            else:
-                print(f"Uploading PDF for {doc['filename']}")
-                file = genai.upload_file(file_path, mime_type="application/pdf")
-                KM_documents_collection.update_one(
-                    {"_id": doc["_id"]},
-                    {"$set": {"gemini_file_id": file.name}}
-                )
+            # Always extract and upload fresh text buffer
+            buffer = extract_text_to_buffer(file_path)
+            if buffer is None:
+                return None
+
+            print(f"[UPLOAD] Uploading fresh extracted text from {doc['filename']}")
+            file = genai.upload_file(buffer, mime_type="text/plain")
+
+            # Optionally clear existing gemini_file_id in DB (to avoid confusion)
+            KM_documents_collection.update_one(
+                {"_id": doc["_id"]},
+                {"$set": {
+                    "gemini_file_id": file.name,  # Update with new one
+                    # "cached_text": None  # Optional: remove any cached text if you had it
+                }}
+            )
 
             return (doc['filename'], {
                 "file": file,
@@ -108,7 +141,7 @@ def load_pdfs_data() -> str:
             })
 
         except Exception as e:
-            print(f"Error uploading PDF {doc.get('filename')}: {e}")
+            print(f"[ERROR] Uploading {doc.get('filename')}: {e}")
             traceback.print_exc()
             return None
 
@@ -119,41 +152,27 @@ def load_pdfs_data() -> str:
     CONTEXT["loaded_pdfs"] = {
         filename: data for filename, data in results if data
     }
-    return f"{len(CONTEXT['loaded_pdfs'])} PDF(s) loaded."
+    return f"{len(CONTEXT['loaded_pdfs'])} PDF(s) loaded (no cache used)."
+
 
 
 @tool
 def load_websites_data() -> str:
-    """Load websites from MongoDB and upload to Gemini. Uses cache and parallel upload."""
+    """Load websites from MongoDB and upload to Gemini. Always downloads fresh content, no caching used."""
     print("[TOOL CALL] load_websites_from_mongo")
 
     def upload_site(doc):
         try:
-            if 'gemini_file_id' in doc:
-                print(f"Using cached website for {doc['url']}")
-                file = genai.get_file(doc['gemini_file_id'])
-                text = doc.get("cached_text", "")
-            else:
-                print(f"Downloading and uploading website: {doc['url']}")
-                r = requests.get(doc['url'], timeout=10)
-                soup = BeautifulSoup(r.text, "html.parser")
-                text = " ".join(p.get_text() for p in soup.find_all("p"))
+            print(f"Downloading and uploading website: {doc['url']}")
+            r = requests.get(doc['url'], timeout=10)
+            soup = BeautifulSoup(r.text, "html.parser")
+            text = " ".join(p.get_text() for p in soup.find_all("p"))
 
-                if not text.strip():
-                    return None
+            if not text.strip():
+                return None
 
-                buffer = BytesIO(text.encode("utf-8"))
-                file = genai.upload_file(buffer, mime_type="text/plain")
-
-                KM_URLs_collection.update_one(
-                    {"_id": doc["_id"]},
-                    {
-                        "$set": {
-                            "gemini_file_id": file.name,
-                            "cached_text": text
-                        }
-                    }
-                )
+            buffer = BytesIO(text.encode("utf-8"))
+            file = genai.upload_file(buffer, mime_type="text/plain")
 
             return (doc['url'], {
                 "file": file,
@@ -174,6 +193,7 @@ def load_websites_data() -> str:
         url: data for url, data in results if data
     }
     return f"{len(CONTEXT['loaded_websites'])} website(s) loaded."
+
 
  
 @tool
